@@ -1,0 +1,42 @@
+{% extends 'main_app/base.html' %}
+
+{% block content %}
+
+<h1>Daftar Laporan Masyarakat</h1>
+
+<br>
+
+<a href="{% url 'add_report' %}" class="btn">+ Tambah Laporan</a>
+
+<br><br>
+
+{% for report in reports %}
+    <div class="card">
+        <h3>{{ report.title }}</h3>
+        <p><b>Kategori:</b> {{ report.category }}</p>
+        <p><b>Deskripsi:</b> {{ report.description }}</p>
+        <p><b>Lokasi:</b> {{ report.location }}</p>
+        <p><b>Status:</b> {{ report.status }}</p>
+
+        <br>
+
+        <!-- tombol edit -->
+        <a href="{% url 'edit_report' report.id %}" class="btn">✏️ Edit</a>
+
+        <!-- tombol delete -->
+        <a href="{% url 'delete_report' report.id %}" 
+           class="btn" 
+           style="background:red; color:white;"
+           onclick="return confirm('Yakin mau hapus laporan ini?')">
+           🗑️ Delete
+        </a>
+
+    </div>
+
+    <hr>
+
+{% empty %}
+    <p>Belum ada laporan</p>
+{% endfor %}
+
+{% endblock %}
