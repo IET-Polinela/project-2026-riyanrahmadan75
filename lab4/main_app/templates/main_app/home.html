@@ -1,0 +1,62 @@
+{% extends 'main_app/base.html' %}
+
+{% block content %}
+
+<h1 style="color:white;">📋 Daftar Laporan Masyarakat</h1>
+
+<br>
+
+<a href="{% url 'add_report' %}" class="btn">+ Tambah Laporan</a>
+
+<br><br>
+
+{% for report in reports %}
+<div class="card">
+
+    <h3>{{ report.title }}</h3>
+
+    <p><b>Kategori:</b> {{ report.category }}</p>
+    <p><b>Deskripsi:</b> {{ report.description }}</p>
+    <p><b>Lokasi:</b> {{ report.location }}</p>
+
+    <!-- STATUS -->
+    <p>
+        <b>Status:</b> 
+        <span style="
+            padding:4px 10px;
+            border-radius:6px;
+            background:#4f46e5;
+            color:white;
+            font-size:12px;">
+            {{ report.status }}
+        </span>
+    </p>
+
+    <br>
+
+    <!-- FORM UPDATE STATUS -->
+    <form method="POST" action="{% url 'update_status' report.pk %}">
+        {% csrf_token %}
+        <select name="status">
+            <option value="REPORTED">Reported</option>
+            <option value="VERIFIED">Verified</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="RESOLVED">Resolved</option>
+        </select>
+
+        <button type="submit" class="btn">Update</button>
+    </form>
+
+    <br>
+
+    <!-- ACTION BUTTON -->
+    <a href="{% url 'edit_report' report.pk %}" class="btn">✏️ Edit</a>
+    <a href="{% url 'delete_report' report.pk %}" class="btn btn-danger">🗑 Delete</a>
+
+</div>
+
+{% empty %}
+<p style="color:white;">Belum ada laporan</p>
+{% endfor %}
+
+{% endblock %}
