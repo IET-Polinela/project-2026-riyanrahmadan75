@@ -1,0 +1,150 @@
+{% extends 'main_app/base.html' %}
+
+{% block content %}
+
+<nav>
+<ol class="breadcrumb">
+<li class="breadcrumb-item"><a href="/">Home</a></li>
+<li class="breadcrumb-item active">Reports</li>
+</ol>
+</nav>
+
+<h2>Daftar Laporan</h2>
+
+<a href="{% url 'add_report' %}" class="btn btn-primary mb-3">
++ Tambah Laporan
+</a>
+
+<table class="table table-bordered table-hover">
+
+<thead class="table-dark text-center">
+<tr>
+<th>Judul</th>
+<th>Lokasi</th>
+<th>Status</th>
+<th>Aksi</th>
+</tr>
+</thead>
+
+<tbody>
+{% for report in reports %}
+<tr>
+
+<td>{{ report.title }}</td>
+<td>{{ report.location }}</td>
+
+<td>
+{% if report.status == 'REPORTED' %}
+<span class="badge bg-secondary">Reported</span>
+{% elif report.status == 'VERIFIED' %}
+<span class="badge bg-primary">Verified</span>
+{% elif report.status == 'IN_PROGRESS' %}
+<span class="badge bg-warning text-dark">In Progress</span>
+{% elif report.status == 'RESOLVED' %}
+<span class="badge bg-success">Resolved</span>
+{% endif %}
+</td>
+
+<td>
+
+{% if report.status == 'REPORTED' %}
+<form method="POST" action="{% url 'update_status' report.id %}" style="display:inline;">
+{% csrf_token %}
+<input type="hidden" name="status" value="VERIFIED">
+<button class="btn btn-primary btn-sm">Verifikasi</button>
+</form>
+
+{% elif report.status == 'VERIFIED' %}
+<form method="POST" action="{% url 'update_status' report.id %}" style="display:inline;">
+{% csrf_token %}
+<input type="hidden" name="status" value="IN_PROGRESS">
+<button class="btn btn-warning btn-sm">Proses</button>
+</form>
+{% endif %}
+
+<a href="{% url 'edit_report' report.id %}" class="btn btn-info btn-sm">Edit</a>
+
+<button class="btn btn-danger btn-sm open-delete" data-id="{{ report.id }}">
+Hapus
+</button>
+
+</td>
+
+</tr>
+{% empty %}
+<tr><td colspan="4" class="text-center">Belum ada laporan</td></tr>
+{% endfor %}
+</tbody>
+
+</table>
+
+
+<!-- 🔥 MODAL DELETE SESUAI DOSEN -->
+<div class="modal fade" id="deleteModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content text-center p-4">
+
+      <div class="mb-3">
+        <div style="
+            width:70px;
+            height:70px;
+            border-radius:50%;
+            border:3px solid #dc3545;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            margin:auto;
+            font-size:30px;
+            color:#dc3545;
+        ">
+          ✖
+        </div>
+      </div>
+
+      <h4>Are you sure?</h4>
+
+      <p class="text-muted">
+        Do you really want to delete this data?<br>
+        This process cannot be undone.
+      </p>
+
+      <div class="d-flex justify-content-center gap-3 mt-3">
+
+        <button class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+
+        <form id="deleteForm" method="POST">
+          {% csrf_token %}
+          <button class="btn btn-danger">
+            Delete
+          </button>
+        </form>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    let modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+
+    document.querySelectorAll('.open-delete').forEach(btn => {
+        btn.addEventListener('click', function() {
+
+            let id = this.dataset.id;
+
+            document.getElementById('deleteForm').action = "/delete/" + id + "/";
+
+            modal.show();
+        });
+    });
+
+});
+</script>
+
+{% endblock %}
