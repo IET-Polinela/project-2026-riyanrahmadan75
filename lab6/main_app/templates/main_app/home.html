@@ -1,0 +1,122 @@
+{% extends 'main_app/base.html' %}
+
+{% block content %}
+
+<!-- 🔥 BREADCRUMB -->
+<div class="mb-3">
+    <a href="/" class="text-decoration-none text-primary">Home</a>
+    <span class="text-muted"> / Reports</span>
+</div>
+
+<!-- 🔥 CARD -->
+<div class="card shadow p-4">
+
+<h3 class="text-center mb-4">
+📊 Daftar Laporan Masyarakat
+</h3>
+
+<a href="{% url 'add_report' %}" class="btn btn-primary mb-3 w-100">
++ Tambah Laporan
+</a>
+
+<table class="table table-bordered table-hover">
+
+<thead class="table-dark text-center">
+<tr>
+<th>Judul</th>
+<th>Lokasi</th>
+<th>User</th>
+<th>Status</th>
+<th>Tanggal</th>
+<th>Aksi</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for report in reports %}
+<tr>
+
+<td>{{ report.title }}</td>
+<td>{{ report.location }}</td>
+<td>{{ report.user }}</td>
+
+<td class="text-center">
+{% if report.status == 'REPORTED' %}
+<span class="badge bg-secondary">Reported</span>
+
+{% elif report.status == 'VERIFIED' %}
+<span class="badge bg-primary">Verified</span>
+
+{% elif report.status == 'IN_PROGRESS' %}
+<span class="badge bg-warning text-dark">In Progress</span>
+
+{% elif report.status == 'RESOLVED' %}
+<span class="badge bg-success">Resolved</span>
+{% endif %}
+</td>
+
+<td>{{ report.created_at|date:"d M Y" }}</td>
+
+<td class="text-center">
+
+{% if user.is_superuser %}
+
+    <!-- EDIT -->
+    <a href="{% url 'edit_report' report.id %}" class="btn btn-info btn-sm">
+        ✏
+    </a>
+
+    <!-- DELETE (FIX POST) -->
+    <form action="{% url 'delete_report' report.id %}" method="POST" style="display:inline;">
+        {% csrf_token %}
+        <button class="btn btn-danger btn-sm"
+                onclick="return confirm('Yakin mau hapus?')">
+            🗑
+        </button>
+    </form>
+
+{% else %}
+    <span class="text-muted">View Only</span>
+{% endif %}
+
+<!-- 🔥 TAMBAHAN STATUS BUTTON -->
+{% if report.status == 'REPORTED' %}
+<form method="POST" action="{% url 'update_status' report.id %}" style="display:inline;">
+    {% csrf_token %}
+    <input type="hidden" name="status" value="VERIFIED">
+    <button class="btn btn-primary btn-sm">✔</button>
+</form>
+
+{% elif report.status == 'VERIFIED' %}
+<form method="POST" action="{% url 'update_status' report.id %}" style="display:inline;">
+    {% csrf_token %}
+    <input type="hidden" name="status" value="IN_PROGRESS">
+    <button class="btn btn-warning btn-sm">⚙</button>
+</form>
+
+{% elif report.status == 'IN_PROGRESS' %}
+<form method="POST" action="{% url 'update_status' report.id %}" style="display:inline;">
+    {% csrf_token %}
+    <input type="hidden" name="status" value="RESOLVED">
+    <button class="btn btn-success btn-sm">✔</button>
+</form>
+{% endif %}
+
+</td>
+
+</tr>
+
+{% empty %}
+<tr>
+<td colspan="6" class="text-center">Belum ada laporan</td>
+</tr>
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+{% endblock %}
