@@ -1,0 +1,282 @@
+{% extends 'main_app/base.html' %}
+
+{% block content %}
+
+<div class="mb-3">
+    <a href="/" class="text-decoration-none text-link-primary">← Kembali ke Home</a>
+</div>
+
+<div class="card card-soft p-4 mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-journal-text me-2"></i>Daftar Laporan Masyarakat</h3>
+            <p class="text-muted mb-0">Pantau laporan warga secara cepat dan terstruktur.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="/dashboard/" class="btn btn-success">📊 Dashboard</a>
+            {% if user.is_superuser %}
+                <a href="{% url 'add_report' %}" class="btn btn-primary">➕ Tambah Laporan</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="mb-4">
+        <input type="text" id="reportSearch" class="form-control rounded-pill" placeholder="🔍 Cari laporan...">
+    </div>
+
+    <div class="table-responsive shadow-sm rounded-4">
+        <table class="table table-hover table-borderless align-middle mb-0">
+            <thead class="table-dark text-white small text-uppercase">
+                <tr>
+                    <th>Judul</th>
+                    <th>Lokasi</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="reportTable">
+
+            {% for report in reports %}
+            <tr>
+                <td>
+                    <div class="fw-semibold">{{ report.title }}</div>
+                    <div class="text-muted small">{{ report.category }}</div>
+                </td>
+                <td>{{ report.location }}</td>
+                <td class="text-center">
+                    {% if report.status == 'REPORTED' %}
+                        <span class="badge bg-secondary status-badge">Reported</span>
+                    {% elif report.status == 'VERIFIED' %}
+                        <span class="badge bg-primary status-badge">Verified</span>
+                    {% elif report.status == 'IN_PROGRESS' %}
+                        <span class="badge bg-warning text-dark status-badge">In Progress</span>
+                    {% elif report.status == 'RESOLVED' %}
+                        <span class="badge bg-success status-badge">Resolved</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1"
+                            onclick="showDetail({{ report.id }})">
+                        Detail
+                    </button>
+
+                    {% if user.is_superuser %}
+                        <a href="{% url 'edit_report' report.id %}" class="btn btn-outline-info btn-sm me-1 mb-1">✏</a>
+                        <form action="{% url 'delete_report' report.id %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <button class="btn btn-outline-danger btn-sm mb-1" onclick="return confirm('Yakin mau hapus?')">
+                                🗑
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    {% if user.is_superuser %}
+                        {% if report.status == 'REPORTED' %}
+                            <form method="POST" action="{% url 'update_status' report.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="VERIFIED">
+                                <button class="btn btn-primary btn-sm">Verifikasi</button>
+                            </form>
+                        {% elif report.status == 'VERIFIED' %}
+                            <form method="POST" action="{% url 'update_status' report.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="IN_PROGRESS">
+                                <button class="btn btn-warning btn-sm">Proses</button>
+                            </form>
+                        {% elif report.status == 'IN_PROGRESS' %}
+                            <form method="POST" action="{% url 'update_status' report.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="RESOLVED">
+                                <button class="btn btn-success btn-sm">Selesai</button>
+                            </form>
+                        {% endif %}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+
+            </tbody>
+        </table>
+    </div>
+</div>
+    <div class="row mb-4 gy-3">
+        <div class="col-md-6">
+            <div class="p-4 rounded-4 bg-white">
+                <h6 class="text-uppercase text-muted mb-3">Pencarian cepat</h6>
+                <input type="text" id="reportSearch" class="form-control" placeholder="🔍 Cari laporan...">
+            </div>
+        </div>
+        <div class="col-md-6 d-flex flex-column justify-content-center">
+            <div class="d-flex flex-wrap gap-2 justify-content-md-end">
+                <a href="/dashboard/" class="btn btn-success">📊 Dashboard</a>
+                {% if user.is_superuser %}
+                <a href="{% url 'add_report' %}" class="btn btn-primary">➕ Tambah Laporan</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive shadow-sm rounded-4">
+        <table class="table table-hover table-borderless align-middle mb-0">
+            <thead class="table-light text-secondary small text-uppercase">
+                <tr>
+                    <th>Judul</th>
+                    <th>Lokasi</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="reportTable">
+
+            {% for report in reports %}
+            <tr>
+                <td>
+                    <div class="fw-semibold">{{ report.title }}</div>
+                    <div class="text-muted small">{{ report.category }}</div>
+                </td>
+                <td>{{ report.location }}</td>
+                <td class="text-center">
+                    {% if report.status == 'REPORTED' %}
+                        <span class="badge bg-secondary status-badge">Reported</span>
+                    {% elif report.status == 'VERIFIED' %}
+                        <span class="badge bg-primary status-badge">Verified</span>
+                    {% elif report.status == 'IN_PROGRESS' %}
+                        <span class="badge bg-warning text-dark status-badge">In Progress</span>
+                    {% elif report.status == 'RESOLVED' %}
+                        <span class="badge bg-success status-badge">Resolved</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    <button class="btn btn-outline-primary btn-sm me-1 mb-1"
+                            onclick="showDetail({{ report.id }})">
+                        Detail
+                    </button>
+
+                    {% if user.is_superuser %}
+                        <a href="{% url 'edit_report' report.id %}" class="btn btn-outline-info btn-sm me-1 mb-1">✏</a>
+                        <form action="{% url 'delete_report' report.id %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <button class="btn btn-outline-danger btn-sm mb-1" onclick="return confirm('Yakin mau hapus?')">
+                                🗑
+                            </button>
+                        </form>
+                    {% endif %}
+
+                    {% if user.is_superuser %}
+                        {% if report.status == 'REPORTED' %}
+                            <form method="POST" action="{% url 'update_status' report.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="VERIFIED">
+                                <button class="btn btn-primary btn-sm">Verifikasi</button>
+                            </form>
+                        {% elif report.status == 'VERIFIED' %}
+                            <form method="POST" action="{% url 'update_status' report.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="IN_PROGRESS">
+                                <button class="btn btn-warning btn-sm">Proses</button>
+                            </form>
+                        {% elif report.status == 'IN_PROGRESS' %}
+                            <form method="POST" action="{% url 'update_status' report.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="RESOLVED">
+                                <button class="btn btn-success btn-sm">Selesai</button>
+                            </form>
+                        {% endif %}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 🔥 MODAL -->
+<div class="modal fade" id="detailModal">
+  <div class="modal-dialog">
+    <div class="modal-content p-4">
+
+        <div class="d-flex justify-content-between">
+            <h5>Detail Laporan</h5>
+            <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <hr>
+
+        <p><b>Judul:</b> <span id="d_title"></span></p>
+        <p><b>Kategori:</b> <span id="d_category"></span></p>
+        <p><b>Status:</b> <span id="d_status"></span></p>
+        <p><b>Lokasi:</b> <span id="d_location"></span></p>
+        <p><b>Deskripsi:</b> <span id="d_description"></span></p>
+
+    </div>
+  </div>
+</div>
+
+<script>
+
+// 🔍 SEARCH
+document.getElementById("reportSearch").addEventListener("input", function() {
+    let keyword = this.value.toLowerCase();
+
+    document.querySelectorAll("#reportTable tr").forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(keyword) ? "" : "none";
+    });
+});
+
+// 🔥 FETCH LIST DATA (INI YANG DIMINTA DOSEN)
+document.addEventListener("DOMContentLoaded", function () {
+
+    fetch('/dashboard/api/search/')
+    .then(response => response.json())
+    .then(data => {
+
+        console.log("DATA DARI API:", data); // 🔥 WAJIB SCREENSHOT
+
+    })
+    .catch(error => {
+        console.error("ERROR:", error);
+    });
+
+});
+
+// 🔥 FETCH DETAIL
+function showDetail(id) {
+
+    fetch(`/dashboard/api/detail/${id}/`)
+    .then(response => response.json())
+    .then(data => {
+
+        console.log("DETAIL:", data); // tambahan
+
+        document.getElementById("d_title").innerText = data.title;
+        document.getElementById("d_category").innerText = data.category || "-";
+        document.getElementById("d_location").innerText = data.location;
+        document.getElementById("d_description").innerText = data.description;
+
+        let statusHTML = '';
+
+        if (data.status === 'REPORTED') {
+            statusHTML = '<span class="badge bg-secondary">Reported</span>';
+        } else if (data.status === 'VERIFIED') {
+            statusHTML = '<span class="badge bg-primary">Verified</span>';
+        } else if (data.status === 'IN_PROGRESS') {
+            statusHTML = '<span class="badge bg-warning text-dark">In Progress</span>';
+        } else if (data.status === 'RESOLVED') {
+            statusHTML = '<span class="badge bg-success">Resolved</span>';
+        }
+
+        document.getElementById("d_status").innerHTML = statusHTML;
+
+        let modal = new bootstrap.Modal(document.getElementById('detailModal'));
+        modal.show();
+    })
+    .catch(error => {
+        console.error("ERROR:", error);
+        alert("Gagal ambil data detail!");
+    });
+}
+
+</script>
+
+{% endblock %}
