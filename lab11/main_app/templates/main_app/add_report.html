@@ -1,0 +1,119 @@
+{% extends 'main_app/base.html' %}
+
+<!-- 🔥 BREADCRUMB -->
+{% block breadcrumb %}
+<nav>
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+        <a href="/" class="text-white">Home</a>
+    </li>
+    <li class="breadcrumb-item active text-white">
+        {% if form.instance.pk %}
+            Edit Laporan
+        {% else %}
+            Tambah Laporan
+        {% endif %}
+    </li>
+  </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card shadow p-4">
+
+        <!-- JUDUL -->
+        <h3 class="mb-4 text-center">
+            {% if form.instance.pk %}
+                ✏️ Edit Laporan
+            {% else %}
+                ➕ Tambah Laporan
+            {% endif %}
+        </h3>
+
+        <form method="POST" id="reportForm">
+            {% csrf_token %}
+
+            <!-- JUDUL -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Judul</label>
+                {{ form.title }}
+            </div>
+
+            <!-- KATEGORI -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Kategori</label>
+                {{ form.category }}
+            </div>
+
+            <!-- DESKRIPSI -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Deskripsi</label>
+                {{ form.description }}
+            </div>
+
+            <!-- LOKASI -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Lokasi</label>
+                {{ form.location }}
+            </div>
+
+            <!-- BUTTON -->
+            <div class="mt-4 d-flex gap-2">
+
+                <button type="submit" id="submitBtn"
+                    class="btn {% if form.instance.pk %}btn-primary{% else %}btn-success{% endif %}">
+
+                    <span id="btnText">
+                        {% if form.instance.pk %}
+                            🔄 Update
+                        {% else %}
+                            💾 Simpan
+                        {% endif %}
+                    </span>
+
+                    <!-- SPINNER -->
+                    <span id="btnLoading"
+                        class="spinner-border spinner-border-sm ms-2 d-none">
+                    </span>
+
+                </button>
+
+                <a href="{% url 'home' %}" class="btn btn-secondary">
+                    ⬅ Kembali
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- 🔥 SCRIPT LOADING (AMAN) -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    const form = document.getElementById("reportForm");
+
+    if (form) {
+        form.addEventListener("submit", function() {
+
+            const btn = document.getElementById("submitBtn");
+            const text = document.getElementById("btnText");
+            const loading = document.getElementById("btnLoading");
+
+            btn.disabled = true;
+            text.innerText = "Loading...";
+            loading.classList.remove("d-none");
+
+        });
+    }
+
+});
+</script>
+
+{% endblock %}

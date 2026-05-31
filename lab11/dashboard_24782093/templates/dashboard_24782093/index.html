@@ -1,0 +1,181 @@
+{% extends 'main_app/base.html' %}
+
+{% block content %}
+
+<h2 class="mb-4">📊 Dashboard</h2>
+
+<!-- 🔍 SEARCH -->
+<div class="mb-3">
+    <input type="text" id="searchInput" class="form-control" placeholder="🔍 Cari laporan...">
+</div>
+
+<div id="searchResults"></div>
+
+<div class="row">
+
+    <div class="col-md-6">
+        <div class="card shadow p-3 mb-4">
+            <h5>Status Laporan</h5>
+            <canvas id="statusChart"></canvas>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow p-3 mb-4">
+            <h5>Kategori Laporan</h5>
+            <canvas id="categoryChart"></canvas>
+        </div>
+    </div>
+
+</div>
+
+<hr>
+
+<h4>Laporan Terbaru</h4>
+
+<div class="row">
+
+    <!-- REPORTED -->
+    <div class="col-md-6">
+        <table class="table table-bordered">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>Judul</th>
+                    <th>Lokasi</th>
+                </tr>
+            </thead>
+            <tbody id="reportedList"></tbody>
+        </table>
+    </div>
+
+    <!-- RESOLVED -->
+    <div class="col-md-6">
+        <table class="table table-bordered">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>Judul</th>
+                    <th>Lokasi</th>
+                </tr>
+            </thead>
+            <tbody id="resolvedList"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content p-3">
+      <h5 id="modalTitle"></h5>
+      <p id="modalDesc"></p>
+      <p><strong>Lokasi:</strong> <span id="modalLoc"></span></p>
+      <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+      <button class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// ===== CHART STATUS =====
+fetch('/dashboard/api/status/')
+.then(res => res.json())
+.then(data => {
+    new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(data),
+            datasets: [{ data: Object.values(data) }]
+        }
+    });
+});
+
+// ===== CHART CATEGORY =====
+fetch('/dashboard/api/category/')
+.then(res => res.json())
+.then(data => {
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(data),
+            datasets: [{ data: Object.values(data) }]
+        }
+    });
+});
+
+// ===== LATEST =====
+fetch('/dashboard/api/latest/')
+.then(res => res.json())
+.then(data => {
+
+    let reportedHTML = "";
+    data.reported.forEach(r => {
+        reportedHTML += `
+            <tr>
+                <td>${r.title}</td>
+                <td>${r.location}</td>
+            </tr>`;
+    });
+
+    let resolvedHTML = "";
+    data.resolved.forEach(r => {
+        resolvedHTML += `
+            <tr>
+                <td>${r.title}</td>
+                <td>${r.location}</td>
+            </tr>`;
+    });
+
+    document.getElementById("reportedList").innerHTML = reportedHTML;
+    document.getElementById("resolvedList").innerHTML = resolvedHTML;
+});
+
+// ===== LIVE SEARCH =====
+document.getElementById("searchInput").addEventListener("keyup", function() {
+
+    let query = this.value;
+
+    fetch(`/dashboard/api/search/?q=${query}`)
+    .then(res => res.json())
+    .then(data => {
+
+        let html = "<ul class='list-group'>";
+
+        data.forEach(item => {
+            html += `
+                <li class="list-group-item d-flex justify-content-between">
+                    ${item.title}
+                    <button class="btn btn-sm btn-primary" onclick="showDetail(${item.id})">
+                        Detail
+                    </button>
+                </li>`;
+        });
+
+        html += "</ul>";
+
+        document.getElementById("searchResults").innerHTML = html;
+    });
+
+});
+
+// ===== MODAL =====
+function showDetail(id) {
+
+    fetch(`/dashboard/api/detail/${id}/`)
+    .then(res => res.json())
+    .then(data => {
+
+        document.getElementById("modalTitle").innerText = data.title;
+        document.getElementById("modalDesc").innerText = data.description;
+        document.getElementById("modalLoc").innerText = data.location;
+        document.getElementById("modalStatus").innerText = data.status;
+
+        let modal = new bootstrap.Modal(document.getElementById('detailModal'));
+        modal.show();
+    });
+}
+</script>
+
+{% endblock %}

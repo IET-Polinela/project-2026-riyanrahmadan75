@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Warga Smart City Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --bg:#f4f6f9;
+            --primary:#0d6efd;
+            --accent:#0b5ed7;
+            --muted:#6c757d;
+        }
+        *{font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif}
+        body{background:var(--bg);}
+        .spa-container{min-height:calc(100vh - 80px)}
+        .dashboard-row{display:flex;gap:20px}
+        .sidebar{width:260px}
+        .main-card{flex:1}
+        .right-col{width:300px}
+        .card-hero{border-radius:8px;padding:48px 24px;text-align:center}
+        .hero-icon{width:72px;height:72px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#e9f2ff,#f2f8ff);color:var(--accent);font-size:28px;margin-bottom:16px}
+        .btn-report{width:100%;padding:14px 18px;border-radius:8px;font-weight:600}
+        .btn-logout{width:100%;margin-top:12px}
+        .card.small{padding:16px;border-radius:8px}
+        .notice-title{font-weight:600;color:var(--accent)}
+        .shadow-soft{box-shadow:0 6px 20px rgba(11,26,49,0.06)}
+        .topbar-brand{letter-spacing:0.2px}
+
+        @media (max-width:991px){
+            .dashboard-row{flex-direction:column}
+            .sidebar,.right-col{width:100%}
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="bi bi-buildings-fill me-2"></i>Smart City Portal
+            </a>
+            <div id="nav-menus" class="ms-auto"></div>
+        </div>
+    </nav>
+
+    <main class="container-fluid px-4 mt-4 spa-container" id="app-content"></main>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
