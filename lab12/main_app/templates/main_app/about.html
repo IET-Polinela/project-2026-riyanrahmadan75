@@ -1,0 +1,57 @@
+{% extends 'main_app/base.html' %}
+
+<!-- 🔥 BREADCRUMB -->
+{% block breadcrumb %}
+<nav>
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+        <a href="/" class="text-white">Home</a>
+    </li>
+    <li class="breadcrumb-item active text-white">About</li>
+  </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card shadow p-4 mx-auto" style="max-width:700px;">
+
+        <!-- JUDUL -->
+        <h2 class="text-center mb-3">👤 Tentang Website</h2>
+
+        <hr>
+
+        <!-- DESKRIPSI -->
+        <p>
+            Website ini dibuat untuk memudahkan masyarakat dalam melaporkan
+            berbagai permasalahan yang terjadi di lingkungan sekitar seperti:
+        </p>
+
+        <!-- LIST -->
+        <ul class="list-group mb-3">
+            <li class="list-group-item">🚧 Jalan rusak</li>
+            <li class="list-group-item">💡 Lampu mati</li>
+            <li class="list-group-item">🗑 Sampah menumpuk</li>
+            <li class="list-group-item">🌊 Banjir</li>
+        </ul>
+
+        <!-- PENJELASAN -->
+        <p>
+            Sistem ini dilengkapi dengan fitur <b>status laporan</b> yang
+            memungkinkan pengguna untuk mengetahui perkembangan laporan mereka,
+            mulai dari <b>Reported</b> hingga <b>Resolved</b>.
+        </p>
+
+        <!-- INFO TAMBAHAN -->
+        <div class="alert alert-info mt-3">
+            💡 Tujuan utama sistem ini adalah meningkatkan respons cepat terhadap
+            permasalahan di lingkungan masyarakat.
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
