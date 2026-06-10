@@ -1,0 +1,55 @@
+{% extends 'main_app/base.html' %}
+
+<!-- 🔥 BREADCRUMB -->
+{% block breadcrumb %}
+<nav>
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+        <a href="/" class="text-white">Home</a>
+    </li>
+    <li class="breadcrumb-item active text-white">Contact</li>
+  </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card shadow p-4 mx-auto" style="max-width:700px;">
+
+        <!-- JUDUL -->
+        <h2 class="text-center mb-3">📞 Kontak Saya</h2>
+
+        <hr>
+
+        <!-- INFO KONTAK -->
+        <h5>Hubungi Saya</h5>
+
+        <p>Jika Anda memiliki pertanyaan atau membutuhkan bantuan, silakan hubungi:</p>
+
+        <ul class="list-group mb-3">
+            <li class="list-group-item"><b>Email:</b> riyanrahmadan@gmail.com</li>
+            <li class="list-group-item"><b>Telepon:</b> 085876312713</li>
+            <li class="list-group-item"><b>Alamat:</b> Bandar Lampung, Indonesia</li>
+        </ul>
+
+        <!-- SOSIAL MEDIA -->
+        <h5 class="mt-4">Media Sosial</h5>
+
+        <ul class="list-group">
+            <li class="list-group-item">📘 Facebook: Riyan</li>
+            <li class="list-group-item">📸 Instagram: @riyanrahmadani</li>
+            <li class="list-group-item">🐦 Twitter: @ngowoh1213</li>
+        </ul>
+
+        <!-- ALERT INFO -->
+        <div class="alert alert-info mt-3">
+            💡 Silakan hubungi melalui salah satu kontak di atas untuk mendapatkan respon lebih cepat.
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
