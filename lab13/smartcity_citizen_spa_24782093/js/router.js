@@ -139,7 +139,7 @@ function setupRegisterForm() {
 
         try {
             // Menembak endpoint RegisterSerializer milik backend Django
-            const response = await fetch('http://127.0.0.1:8000/api/register/', {
+            const response = await fetch('http://103.151.63.88:8010/api/register/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
