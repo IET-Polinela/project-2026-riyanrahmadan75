@@ -2,6 +2,7 @@
 
 {% block content %}
 
+<!-- 🔥 BREADCRUMB -->
 <nav>
 <ol class="breadcrumb">
 <li class="breadcrumb-item"><a href="/">Home</a></li>
@@ -9,7 +10,12 @@
 </ol>
 </nav>
 
-<h2>Daftar Laporan</h2>
+<!-- 🔥 CARD WRAPPER BIAR MIRIP DOSEN -->
+<div class="card shadow p-4">
+
+<h3 class="text-center mb-4">
+📊 Daftar Laporan Masyarakat
+</h3>
 
 <a href="{% url 'add_report' %}" class="btn btn-primary mb-3">
 + Tambah Laporan
@@ -33,53 +39,92 @@
 <td>{{ report.title }}</td>
 <td>{{ report.location }}</td>
 
-<td>
+<!-- 🔥 STATUS BADGE -->
+<td class="text-center">
 {% if report.status == 'REPORTED' %}
 <span class="badge bg-secondary">Reported</span>
+
 {% elif report.status == 'VERIFIED' %}
 <span class="badge bg-primary">Verified</span>
+
 {% elif report.status == 'IN_PROGRESS' %}
 <span class="badge bg-warning text-dark">In Progress</span>
+
 {% elif report.status == 'RESOLVED' %}
 <span class="badge bg-success">Resolved</span>
 {% endif %}
 </td>
 
-<td>
+<!-- 🔥 AKSI -->
+<td class="text-center">
 
+<!-- REPORTED -->
 {% if report.status == 'REPORTED' %}
 <form method="POST" action="{% url 'update_status' report.id %}" style="display:inline;">
 {% csrf_token %}
 <input type="hidden" name="status" value="VERIFIED">
-<button class="btn btn-primary btn-sm">Verifikasi</button>
+<button class="btn btn-primary btn-sm">
+✔ Verifikasi
+</button>
 </form>
 
+<!-- VERIFIED -->
 {% elif report.status == 'VERIFIED' %}
 <form method="POST" action="{% url 'update_status' report.id %}" style="display:inline;">
 {% csrf_token %}
 <input type="hidden" name="status" value="IN_PROGRESS">
-<button class="btn btn-warning btn-sm">Proses</button>
+<button class="btn btn-warning btn-sm">
+⚙ Proses
+</button>
 </form>
+
+<!-- IN_PROGRESS -->
+{% elif report.status == 'IN_PROGRESS' %}
+<form method="POST" action="{% url 'update_status' report.id %}" style="display:inline;">
+{% csrf_token %}
+<input type="hidden" name="status" value="RESOLVED">
+<button class="btn btn-success btn-sm">
+✔ Resolve
+</button>
+</form>
+
 {% endif %}
 
-<a href="{% url 'edit_report' report.id %}" class="btn btn-info btn-sm">Edit</a>
+<!-- EDIT -->
+<a href="{% url 'edit_report' report.id %}" class="btn btn-info btn-sm">
+✏
+</a>
 
+<!-- DELETE -->
 <button class="btn btn-danger btn-sm open-delete" data-id="{{ report.id }}">
-Hapus
+🗑
 </button>
 
 </td>
 
 </tr>
+
 {% empty %}
-<tr><td colspan="4" class="text-center">Belum ada laporan</td></tr>
+<tr>
+<td colspan="4" class="text-center">
+
+<!-- 🔥 EMPTY STATE -->
+<h5>Belum ada laporan</h5>
+<a href="{% url 'add_report' %}" class="btn btn-primary mt-2">
++ Tambah Laporan
+</a>
+
+</td>
+</tr>
 {% endfor %}
 </tbody>
 
 </table>
 
+</div>
 
-<!-- 🔥 MODAL DELETE SESUAI DOSEN -->
+
+<!-- 🔥 MODAL DELETE (SESUAI DOSEN) -->
 <div class="modal fade" id="deleteModal">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content text-center p-4">
@@ -128,6 +173,7 @@ Hapus
 </div>
 
 
+<!-- 🔥 SCRIPT -->
 <script>
 document.addEventListener("DOMContentLoaded", function() {
 

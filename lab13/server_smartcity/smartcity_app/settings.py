@@ -97,15 +97,15 @@ POSTGRES_DB = os.environ.get('POSTGRES_DB')
 
 if POSTGRES_DB:
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': POSTGRES_DB,
-            'USER': os.environ.get('POSTGRES_USER', 'your_db_user'),
-            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'your_db_password'),
-            'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
-            'PORT': os.environ.get('POSTGRES_PORT', '5432'),
-        }
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'db_mhs10',         # Sesuai format db_mhsXX
+        'USER': 'user_mhs10',       # Sesuai format user_mhsXX
+        'PASSWORD': 'mhs10',        # Sesuai format mhsXX
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
     }
+}
 else:
     DATABASES = {
         'default': {
@@ -136,9 +136,7 @@ USE_TZ = True
 # STATIC FILES
 # ========================
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [
-    BASE_DIR / "staticfiles",
-]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

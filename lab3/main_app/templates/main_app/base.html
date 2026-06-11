@@ -5,95 +5,88 @@
 
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background: #2563eb;
+            font-family: Arial;
+            background: linear-gradient(135deg,#1e293b,#2563eb);
             margin: 0;
         }
 
-        /* NAVBAR */
         .navbar {
-            background: #1e1e2f;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
             padding: 15px 40px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
         }
 
         .navbar h2 {
             color: white;
-            margin: 0;
-            font-size: 18px;
         }
 
         .nav-links a {
             color: white;
             margin-left: 20px;
             text-decoration: none;
-            font-size: 14px;
         }
 
-        .nav-links a:hover {
-            opacity: 0.7;
-        }
-
-        /* CONTAINER */
         .container {
-            padding: 30px 60px;
+            padding: 40px;
         }
 
-        /* BUTTON */
+        h1 {
+            color: white;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            width: 400px;
+        }
+
         .btn {
-            padding: 8px 16px;
-           background: #4f46e5;
+            padding: 8px 12px;
+            background: #4f46e5;
             color: white;
             border-radius: 6px;
             text-decoration: none;
-            font-size: 14px;
-        }
-
-        .btn:hover {
-            opacity: 0.9;
         }
 
         .btn-danger {
             background: #ef4444;
         }
 
-        /* CARD (INI YANG BIKIN TIPIS & ELEGAN) */
-        .card {
-            background: white;
-            padding: 20px;
-            margin-bottom: 15px;
-            border-radius: 10px;
-
-            /* ini bikin halus */
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
         }
 
-        h1 {
-            margin-top: 0;
+        button {
+            padding: 10px;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 6px;
         }
 
     </style>
-
 </head>
 
 <body>
 
-    <div class="navbar">
-        <h2>Sistem Pelaporan</h2>
-
-        <div class="nav-links">
-            <a href="/">Home</a>
-            <a href="/about/">About</a>
-            <a href="/contacts/">Contacts</a>
-        </div>
+<div class="navbar">
+    <h2>Sistem Pelaporan</h2>
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/about/">About</a>
+        <a href="/contacts/">Contacts</a>
     </div>
+</div>
 
-    <div class="container">
-        {% block content %}{% endblock %}
-    </div>
+<div class="container">
+    {% block content %}{% endblock %}
+</div>
 
 </body>
 </html>

@@ -107,7 +107,7 @@ STATICFILES_DIRS = [
 AUTH_USER_MODEL = 'usermanagement_24782093.CustomUser'
 
 # ========================
-# 🔐 AUTH CONFIG (INI YANG FIX ERROR LOGIN)
+# 🔐 AUTH CONFIG 
 # ========================
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'

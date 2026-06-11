@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h1>Daftar Laporan Masyarakat</h1>
+<h1>📋 Daftar Laporan Masyarakat</h1>
 
 <br>
 
@@ -11,32 +11,21 @@
 <br><br>
 
 {% for report in reports %}
-    <div class="card">
-        <h3>{{ report.title }}</h3>
-        <p><b>Kategori:</b> {{ report.category }}</p>
-        <p><b>Deskripsi:</b> {{ report.description }}</p>
-        <p><b>Lokasi:</b> {{ report.location }}</p>
-        <p><b>Status:</b> {{ report.status }}</p>
+<div class="card">
+    <h3>{{ report.title }}</h3>
+    <p><b>Kategori:</b> {{ report.category }}</p>
+    <p><b>Deskripsi:</b> {{ report.description }}</p>
+    <p><b>Lokasi:</b> {{ report.location }}</p>
+    <p><b>Status:</b> {{ report.status }}</p>
 
-        <br>
+    <br>
 
-        <!-- tombol edit -->
-        <a href="{% url 'edit_report' report.id %}" class="btn">✏️ Edit</a>
-
-        <!-- tombol delete -->
-        <a href="{% url 'delete_report' report.id %}" 
-           class="btn" 
-           style="background:red; color:white;"
-           onclick="return confirm('Yakin mau hapus laporan ini?')">
-           🗑️ Delete
-        </a>
-
-    </div>
-
-    <hr>
+    <a href="{% url 'edit_report' report.id %}" class="btn">✏️ Edit</a>
+    <a href="{% url 'delete_report' report.id %}" class="btn btn-danger">🗑 Delete</a>
+</div>
 
 {% empty %}
-    <p>Belum ada laporan</p>
+<p style="color:white;">Belum ada laporan</p>
 {% endfor %}
 
 {% endblock %}
