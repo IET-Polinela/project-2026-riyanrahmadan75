@@ -1,6 +1,11 @@
 # main_app/urls.py
-from django.urls import path
-from . import views  # Mengimpor seluruh fungsi view dari views.py
+from django.urls import path, include  # 1. Tambahkan 'include' di sini
+from rest_framework.routers import DefaultRouter  # 2. Tambahkan ini untuk API DRF
+from . import views
+
+# 3. Buat Router Otomatis untuk menciduk ReportViewSet dari views.py
+router = DefaultRouter()
+router.register(r'reports', views.ReportViewSet, basename='api_report')
 
 urlpatterns = [
     # 🌆 1. Jalur Halaman Utama / Root URL (Landing Page Kata-Kata Sambutan Indah)
@@ -26,4 +31,8 @@ urlpatterns = [
     # 📄 6. Jalur Halaman Statis Bawaan Lab
     path('about/', views.about, name='about'),
     path('contacts/', views.contacts, name='contacts'),
+
+    # 🌐 7. JALUR UTAMA API (Menghubungkan Frontend JS Smart Citizen ke Backend)
+    # Jalur ini otomatis menciptakan alamat: /api/reports/ 
+    path('api/', include(router.urls)),
 ]
