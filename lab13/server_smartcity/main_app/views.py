@@ -32,12 +32,27 @@ class ReportViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = Report.objects.all().order_by('-updated_at')
         tab = self.request.query_params.get('tab', None)
+        
         if tab == 'my_reports':
-            queryset = queryset.filter(reporter=user)
+            if user.is_authenticated:
+                queryset = queryset.filter(reporter=user)
+            else:
+                queryset = Report.objects.none()
+                
         elif tab == 'feed':
-            queryset = queryset.filter(~Q(reporter=user) & ~Q(status='DRAFT'))
+            if user.is_authenticated:
+                # PERBAIKAN: Menggunakan .exclude() agar data reporter kosong (NULL) tidak ikut terbuang di database
+                queryset = queryset.exclude(reporter=user).exclude(status='DRAFT')
+            else:
+                # PERBAIKAN NYATA: Jika frontend mengakses tanpa session/token (Anonim), tetap tampilkan semua aduan publik
+                queryset = queryset.exclude(status='DRAFT')
+                
         else:
-            queryset = queryset.filter(~Q(status='DRAFT') | Q(status='DRAFT', reporter=user))
+            if user.is_authenticated:
+                queryset = queryset.exclude(status='DRAFT') | queryset.filter(status='DRAFT', reporter=user)
+            else:
+                queryset = queryset.exclude(status='DRAFT')
+                
         return queryset
 
     def perform_create(self, serializer):
