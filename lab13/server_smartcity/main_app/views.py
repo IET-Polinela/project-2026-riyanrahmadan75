@@ -10,7 +10,6 @@ from django.db.models import Q
 
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
-# PERBAIKAN: Mengimpor AllowAny agar API bisa diakses dari luar domain tanpa blokir 401
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from .models import Report
@@ -24,8 +23,8 @@ class ReportPagination(PageNumberPagination):
 
 class ReportViewSet(viewsets.ModelViewSet):
     serializer_class = ReportSerializer
-    pagination_class = ReportPagination
-    # PERBAIKAN: Mengubah permission dari [IsAuthenticated] menjadi [AllowAny]
+    # PERBAIKAN UTAMA: Set ke None agar DRF mengirimkan Array murni [] sesuai kebutuhan JS Frontend
+    pagination_class = None
     permission_classes = [AllowAny]
 
     def get_queryset(self):
@@ -41,10 +40,8 @@ class ReportViewSet(viewsets.ModelViewSet):
                 
         elif tab == 'feed':
             if user.is_authenticated:
-                # PERBAIKAN: Menggunakan .exclude() agar data reporter kosong (NULL) tidak ikut terbuang di database
                 queryset = queryset.exclude(reporter=user).exclude(status='DRAFT')
             else:
-                # PERBAIKAN NYATA: Jika frontend mengakses tanpa session/token (Anonim), tetap tampilkan semua aduan publik
                 queryset = queryset.exclude(status='DRAFT')
                 
         else:
@@ -72,7 +69,7 @@ def home_landing_view(request):
 class ReportListView(LoginRequiredMixin, ListView):
     login_url = 'login'
     model = Report
-    template_name = 'main_app/laporan.html'  # Diarahkan ke file laporan baru
+    template_name = 'main_app/laporan.html'
     context_object_name = 'reports'
 
     def get_queryset(self):
