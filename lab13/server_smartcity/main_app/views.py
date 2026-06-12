@@ -23,8 +23,8 @@ class ReportPagination(PageNumberPagination):
 
 class ReportViewSet(viewsets.ModelViewSet):
     serializer_class = ReportSerializer
-    # PERBAIKAN UTAMA: Set ke None agar DRF mengirimkan Array murni [] sesuai kebutuhan JS Frontend
-    pagination_class = None
+    # 🎯 PERBAIKAN: Kembalikan pembungkus data ini karena JS Frontend kamu sangat membutuhkannya!
+    pagination_class = ReportPagination
     permission_classes = [AllowAny]
 
     def get_queryset(self):
@@ -42,6 +42,7 @@ class ReportViewSet(viewsets.ModelViewSet):
             if user.is_authenticated:
                 queryset = queryset.exclude(reporter=user).exclude(status='DRAFT')
             else:
+                # Loloskan semua aduan publik untuk pengunjung luar (Anonim)
                 queryset = queryset.exclude(status='DRAFT')
                 
         else:
@@ -59,13 +60,11 @@ class ReportViewSet(viewsets.ModelViewSet):
 # CORE VIEW INTERFACE TEMPLATE
 # ==========================================
 
-# 1. LANDING PAGE UTAMA (KATA-KATA INDAH)
 def home_landing_view(request):
     if not request.user.is_authenticated:
         return redirect('login')
     return render(request, 'main_app/home.html')
 
-# 2. HALAMAN KHUSUS MENU REPORTS (MENAMPILKAN TABEL)
 class ReportListView(LoginRequiredMixin, ListView):
     login_url = 'login'
     model = Report
