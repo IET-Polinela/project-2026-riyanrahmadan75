@@ -10,7 +10,8 @@ from django.db.models import Q
 
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated
+# PERBAIKAN: Mengimpor AllowAny agar API bisa diakses dari luar domain tanpa blokir 401
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from .models import Report
 from .forms import RegisterForm
@@ -24,7 +25,8 @@ class ReportPagination(PageNumberPagination):
 class ReportViewSet(viewsets.ModelViewSet):
     serializer_class = ReportSerializer
     pagination_class = ReportPagination
-    permission_classes = [IsAuthenticated]
+    # PERBAIKAN: Mengubah permission dari [IsAuthenticated] menjadi [AllowAny]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         user = self.request.user

@@ -59,7 +59,7 @@ async function loadDashboardData(tab, page) {
 
     try {
         // Tembak endpoint API terpaginasi dengan query parameter pendukung Lab 12
-        const response = await requestAPI(`/api/report?tab=${tab}&page=${page}`, 'GET');
+        const response = await requestAPI(`/api/reports/?tab=${tab}&page=${page}`, 'GET');
         
         if (response && response.status === 200) {
             const data = await response.json();
@@ -207,7 +207,7 @@ function renderPagination(totalPages) {
 async function loadSummaryStats() {
     try {
         // Trik bypass batasan halaman menggunakan limit parameter yang diatur sengaja sangat besar
-        const response = await requestAPI(`/api/report?tab=my_reports&page_size=1000`, 'GET');
+        const response = await requestAPI(`/api/reports/?tab=my_reports&page_size=1000`, 'GET');
         if (response && response.status === 200) {
            // [Di dalam fungsi loadSummaryStats bagian response status === 200]
 const data = await response.json();
@@ -231,7 +231,7 @@ if (document.getElementById('countSelesai')) document.getElementById('countSeles
 async function editDraft(id) {
     editingReportId = id; // Isi variabel global dengan id objek draft yang di klik
     try {
-        const response = await requestAPI(`/api/report/${id}`, 'GET');
+        const response = await requestAPI(`/api/reports/${id}/`, 'GET');
         if (response && response.status === 200) {
             const dataLama = await response.json();
             
@@ -263,12 +263,12 @@ async function handleSaveReport(targetStatus) {
         return;
     }
 
-    let linkEndpoint = '/api/report';
+    let linkEndpoint = '/api/reports/';
     let metodeHTTP = 'POST';
 
     // Jika global variabel terisi ID, ubah rute dan metode secara dinamis menjadi PUT (Kasus Edit)
     if (editingReportId !== null) {
-        linkEndpoint = `/api/report/${editingReportId}`;
+        linkEndpoint = `/api/reports/${editingReportId}/`;
         metodeHTTP = 'PUT';
     }
 
