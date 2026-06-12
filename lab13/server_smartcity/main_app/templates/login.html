@@ -1,42 +1,142 @@
 {% extends 'main_app/base.html' %}
 
 {% block content %}
-<div class="container mt-5" style="max-width:400px;">
+{% if user.is_authenticated %}
+    <script>window.location.href = "{% url 'dashboard' %}";</script>
+{% endif %}
+<style>
+    .login-page {
+        min-height: 75vh;
+        background: radial-gradient(circle at top left, rgba(16, 185, 129, 0.14), transparent 28%),
+                    radial-gradient(circle at bottom right, rgba(74, 222, 128, 0.12), transparent 30%),
+                    linear-gradient(180deg, #effcf6 0%, #d9f7e4 100%);
+    }
+    .login-card {
+        border-radius: 32px;
+        overflow: hidden;
+        background: rgba(255,255,255,0.96);
+        box-shadow: 0 28px 70px -40px rgba(15, 23, 42, 0.35);
+    }
+    .login-topbar {
+        height: 8px;
+        background: linear-gradient(90deg, #059669, #10b981);
+    }
+    .login-side {
+        min-height: 100%;
+        background: linear-gradient(180deg, rgba(16, 185, 129, 0.18), rgba(255,255,255,0.92));
+        border-right: 1px solid rgba(16, 185, 129, 0.14);
+    }
+    .login-side::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        background: rgba(16, 185, 129, 0.1);
+        z-index: 0;
+    }
+    .login-side-content {
+        position: relative;
+        z-index: 1;
+    }
+    .login-hero {
+        display: inline-flex;
+        width: 72px;
+        height: 72px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 24px;
+        background: rgba(16, 185, 129, 0.14);
+        color: #047857;
+        font-size: 2.1rem;
+    }
+    .login-note {
+        background: rgba(220, 252, 231, 0.8);
+        color: #064e3b;
+    }
+    .login-quote {
+        font-size: 1rem;
+        line-height: 1.7;
+        color: #164e2b;
+    }
+    .login-tags {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+    .login-tag {
+        background: rgba(255,255,255,0.72);
+        border: 1px solid rgba(16, 185, 129, 0.16);
+        border-radius: 16px;
+        padding: 0.95rem 1rem;
+        color: #0f172a;
+        font-size: 0.92rem;
+        font-weight: 600;
+    }
+</style>
 
-    <h3 class="text-center mb-4">Login</h3>
+<div class="container login-page d-flex justify-content-center align-items-center">
+    <div class="card login-card border-0 shadow-lg" style="width: 100%; max-width: 900px;">
+        <div class="login-topbar"></div>
+        <div class="row g-0">
+            <div class="col-lg-5 d-none d-lg-flex login-side p-5 position-relative">
+                <div class="login-side-content">
+                    <div class="login-hero mb-4">💡</div>
+                    <h3 class="fw-bold text-dark mb-3">Suara Anda, Perubahan Nyata</h3>
+                    <p class="login-quote mb-4">Mari jadikan lingkungan lebih aman dan nyaman. Laporkan masalah sekitar Anda, dan biarkan kami membantu melacak tindak lanjutnya secara cepat.</p>
+                    <div class="login-tags mb-4">
+                        <div class="login-tag">Aduan Cepat</div>
+                        <div class="login-tag">Pantau Status</div>
+                        <div class="login-tag">Komunitas Aktif</div>
+                        <div class="login-tag">Aksi Nyata</div>
+                    </div>
+                    <div class="p-3 rounded-4" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.18);">
+                        <p class="small mb-0 text-dark">“Setiap laporan adalah langkah bersama menuju kota yang lebih bersih, aman, dan nyaman untuk semua.”</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7 p-5">
+                <div class="text-center mb-4">
+                    <div class="login-hero mb-3">🔒</div>
+                    <h3 class="fw-bold text-dark mb-1" style="letter-spacing: -0.5px;">Masuk ke Portal</h3>
+                    <p class="text-muted small">Gunakan username dan password Anda untuk mengakses dashboard laporan.</p>
+                </div>
 
-    {% if form.errors %}
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-            Username atau password salah!
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            {% if form.errors or form.non_field_errors %}
+                <div class="alert alert-danger border-0 rounded-3 small py-2 text-center fw-bold mb-3" role="alert" style="background-color: #fef2f2; color: #991b1b;">
+                    ❌ Username atau password salah!
+                </div>
+            {% endif %}
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info border-0 rounded-3 small py-2 text-center mb-3" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST" action="">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary">Username</label>
+                    <input type="text" name="username" class="form-control form-control-lg bg-white border shadow-sm rounded-3 fs-6" placeholder="Masukkan username" required style="padding: 14px;">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-secondary">Password</label>
+                    <input type="password" name="password" class="form-control form-control-lg bg-white border shadow-sm rounded-3 fs-6" placeholder="Masukkan password" required style="padding: 14px;">
+                </div>
+                <button type="submit" class="btn btn-success btn-lg w-100 border-0 rounded-pill fs-6 fw-bold shadow-sm mb-3" style="padding: 13px 20px;">
+                    Masuk Ke Portal
+                </button>
+            </form>
+
+            <div class="text-center mt-3">
+                <p class="text-muted small mb-0">Belum punya akun? <a href="{% url 'register' %}" class="text-decoration-none fw-bold text-success">Daftar di sini</a></p>
+            </div>
         </div>
-    {% endif %}
-
-    <form method="POST">
-        {% csrf_token %}
-
-        <div class="mb-3">
-            <label class="form-label">Username</label>
-            <input type="text" name="username" class="form-control" placeholder="Masukkan username" required>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Password</label>
-            <input type="password" name="password" class="form-control" placeholder="Masukkan password" required>
-        </div>
-
-        <button type="submit" class="btn btn-primary w-100 fw-bold">Login</button>
-    </form>
-
-    <p class="text-center mt-3">
-        Belum punya akun?
-        <a href="{% url 'register' %}" class="text-decoration-none">Register di sini</a>
-    </p>
-
-</div>
-
-<div class="text-center text-muted mt-5">
-    <small>&copy; 2026 IET City - Bandar Lampung</small>
+    </div>
 </div>
 {% endblock %}
