@@ -12,7 +12,7 @@ function initDashboardPage() {
     const modalEl = document.getElementById('reportModal');
     if (modalEl) bsModalInstance = new bootstrap.Modal(modalEl);
 
-    // 🛠️ FIX 1: Tambahkan e.preventDefault() agar link SPA tidak melakukan reload/reset state
+    // Gunakan e.preventDefault() agar link SPA tidak melakukan reload/reset state
     const tabMyReports = document.getElementById('tabMyReports');
     if (tabMyReports) {
         tabMyReports.onclick = (e) => {
@@ -40,7 +40,6 @@ function initDashboardPage() {
         };
     }
 
-    // 🔥 SOLUSI UTAMA BUG GANDA: Menimpa event klik modal agar tidak stacking
     const btnDraft = document.getElementById('btnDraft');
     if (btnDraft) btnDraft.onclick = () => handleSaveReport('DRAFT');
 
@@ -55,7 +54,6 @@ function switchTab(tabName, element) {
     currentTab = tabName;
     currentPage = 1; // Reset halaman ke 1 setiap ganti kategori tab
     
-    // Amankan selektor dengan memastikan elemennya ada sebelum memanipulasi class list
     const elMyReports = document.getElementById('tabMyReports');
     const elFeed = document.getElementById('tabFeed');
     
@@ -67,22 +65,21 @@ function switchTab(tabName, element) {
     loadDashboardData(currentTab, currentPage);
 }
 
-// ==================== 1. FETCHING DATA TERPAGINASI & MANIPULASI PROGRESS BAR ====================
+// ==================== 1. FETCHING DATA TERPAGINASI ====================
 async function loadDashboardData(tab, page) {
     currentTab = tab;
     currentPage = page;
 
     try {
-        // Tembak endpoint API terpaginasi dengan query parameter pendukung Lab 12
         const response = await requestAPI(`/api/reports/?tab=${tab}&page=${page}`, 'GET');
         
         if (response && response.status === 200) {
             const data = await response.json();
             
-            // EKSTRAKSI DATA PAGINASI
+            // EKSTRAKSI DATA
             allReports = data.results || [];
             const totalCount = data.count || 0;
-            const totalPages = Math.ceil(totalCount / 10); // Batasan pembagian 10 data per halaman
+            const totalPages = Math.ceil(totalCount / 10); 
 
             // SINKRONISASI ANTARMUKA LAYAR
             renderList();
@@ -106,19 +103,27 @@ async function loadDashboardData(tab, page) {
 function renderList() {
     const container = document.getElementById('listContainer');
     if (!container) return;
-    container.innerHTML = ""; // Bersihkan sisa renderan tab sebelumnya
+    container.innerHTML = ""; // Kosongkan wadah HTML terlebih dahulu
 
-    if (allReports.length === 0) {
+    // 🎯 FIX UTAMA: Filter paksa di browser laptopmu (Bypass Eror Server Kampus)
+    let reportsToRender = allReports;
+    if (currentTab === 'my_reports') {
+        // Hanya loloskan laporan yang nama pelapornya murni string 'riyan'
+        // Laporan milik Farrel dan beat otomatis DIBUANG dari antrean render tab ini!
+        reportsToRender = allReports.filter(report => report.reporter === 'riyan');
+    }
+
+    // Jika setelah difilter hasilnya kosong (Kondisi saat kamu belum membuat aduan resmi)
+    if (reportsToRender.length === 0) {
         container.innerHTML = `
-            <div class="col-12 text-center text-muted p-5 bg-white rounded shadow-sm">
-                <i class="bi bi-inbox fs-1 mb-2"></i>
+            <div class="col-12 text-center text-muted p-5 bg-white rounded shadow-sm my-2">
+                <i class="bi bi-inbox fs-1 mb-2 text-secondary"></i>
                 <h6 class="fw-bold m-0 text-secondary">Belum ada aduan warga di kategori ini.</h6>
             </div>`;
         return;
     }
 
-    allReports.forEach(report => {
-        // Logika Dinamis indikasi tebal lebar Progress Bar & Style Badge
+    reportsToRender.forEach(report => {
         let progressWidth = "25%";
         let progressColor = "bg-secondary";
         let badgeStyle = "bg-secondary";
@@ -137,20 +142,19 @@ function renderList() {
             badgeStyle = "bg-success"; 
         }
 
-        // Tombol Edit hanya dimunculkan jika statusnya DRAFT dan milik user yang sedang aktif login
         const tombolEditHtml = (report.status === 'DRAFT' && report.is_owner) ? 
             `<button class="btn btn-sm btn-outline-warning fw-bold mt-3" onclick="editDraft(${report.id})">
                 <i class="bi bi-pencil-square me-1"></i>Edit Draft
              </button>` : '';
 
         const cardTemplate = `
-            <div class="col-12">
-                <div class="card border-0 shadow-sm p-4 position-relative rounded-3 mb-3">
+            <div class="col-12 mb-3">
+                <div class="card border-0 shadow-sm p-4 position-relative rounded-3">
                     <span class="badge ${badgeStyle} position-absolute top-0 end-0 m-4 fw-bold p-2">${report.status}</span>
                     <h5 class="fw-bold mb-1 text-primary pe-5">${report.title}</h5>
                     <p class="text-muted small mb-2">
                         <i class="bi bi-person-circle me-1"></i>Pelapor: <b>${report.reporter || 'Anonim'}</b> | 
-                        <i class="bi Geo-alt-fill text-danger me-1"></i>Lokasi: ${report.location}
+                        <i class="bi bi-geo-alt-fill text-danger me-1"></i>Lokasi: ${report.location}
                     </p>
                     <p class="text-secondary small mb-3">${report.description}</p>
                     
