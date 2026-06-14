@@ -16,6 +16,10 @@ from .models import Report
 from .forms import RegisterForm
 from .serializers import ReportSerializer
 
+# ==========================================
+# API REST FRAMEWORK CONFIG (LAB 10)
+# ==========================================
+
 class ReportPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
@@ -28,7 +32,7 @@ class ReportViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        # Mengurutkan dari yang paling baru diperbarui/dibuat
+        # Mengurutkan dari aduan yang paling baru diperbarui/dibuat
         queryset = Report.objects.all().order_by('-updated_at')
         tab = self.request.query_params.get('tab', None)
         
@@ -37,22 +41,27 @@ class ReportViewSet(viewsets.ModelViewSet):
             if user.is_authenticated:
                 return queryset.filter(reporter=user)
             else:
+                # Jika belum login/anonim, amankan dengan mengembalikan data kosong []
                 return Report.objects.none()
                 
         elif tab == 'feed':
             # 🔓 TAB FEED KOTA (PUBLIK): Menampilkan semua aduan masyarakat yang bukan DRAFT
-            # Termasuk aduan milik kita sendiri yang sudah dipublikasikan
+            # Termasuk aduan milik kita sendiri yang sudah dipublikasikan (bukan DRAFT)
             return queryset.exclude(status='DRAFT')
                 
         else:
-            # Jalur alternatif jika parameter tab tidak dikirim oleh frontend
+            # Jalur pengaman alternatif jika parameter tab tidak dikirim oleh frontend
             if user.is_authenticated:
                 return queryset.filter(Q(reporter=user) | ~Q(status='DRAFT'))
             else:
                 return queryset.exclude(status='DRAFT')
 
     def perform_create(self, serializer):
-        serializer.save(reporter=self.request.user)
+        # Otomatis mengikat pembuat laporan ke user yang sedang login
+        if self.request.user.is_authenticated:
+            serializer.save(reporter=self.request.user)
+        else:
+            serializer.save()
 
 # ==========================================
 # CORE VIEW INTERFACE TEMPLATE
