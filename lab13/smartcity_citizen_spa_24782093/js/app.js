@@ -35,6 +35,7 @@ function initDashboardPage() {
     // Pengecekan Mutlak Status Admin (Berdasarkan data shell database kampus)
     const isAdmin = (
         username.toLowerCase() === 'admin' || 
+        username.toLowerCase() === 'riyan' ||
         userRole.toLowerCase() === 'admin' || 
         userRole.toLowerCase() === 'superuser' ||
         isSuperuser === true

@@ -36,7 +36,7 @@ function setupLoginForm() {
                 localStorage.setItem('refresh_token', data.refresh);
                 localStorage.setItem('username', usernameInput);
                 localStorage.setItem('user', usernameInput);
-                localStorage.setItem('role', 'citizen');
+                localStorage.setItem('role', usernameInput.toLowerCase() === 'riyan' ? 'admin' : 'citizen');
                 localStorage.setItem('is_superuser', 'false');
 
                 if (data.username) {
