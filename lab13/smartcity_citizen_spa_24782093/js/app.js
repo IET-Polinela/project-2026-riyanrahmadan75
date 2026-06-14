@@ -69,7 +69,6 @@ async function loadDashboardData(tab, page) {
     currentPage = page;
 
     try {
-        // Trik bypass batasan halaman server jika membuka tab personal
         const url = tab === 'my_reports' 
             ? `/api/reports/?tab=my_reports&page_size=1000` 
             : `/api/reports/?tab=${tab}&page=${page}`;
@@ -84,7 +83,7 @@ async function loadDashboardData(tab, page) {
                 // 1. Saring paksa hanya laporan yang pelapornya murni 'riyan'
                 const filteredReports = rawResults.filter(report => report.reporter === 'riyan');
                 
-                // 2. Hitung total halaman asli murni milik riyan (bukan total seluruh kota)
+                // 2. Hitung total halaman asli murni milik riyan
                 const totalCount = filteredReports.length;
                 const totalPages = Math.ceil(totalCount / 10);
                 
@@ -93,11 +92,9 @@ async function loadDashboardData(tab, page) {
                 const endIndex = startIndex + 10;
                 allReports = filteredReports.slice(startIndex, endIndex);
                 
-                // Render ke layar
                 renderList();
                 renderPagination(totalPages);
             } else {
-                // Untuk Tab Feed Kota (Publik), gunakan data asli bawaan server
                 allReports = rawResults;
                 const totalCount = data.count || 0;
                 const totalPages = Math.ceil(totalCount / 10);
@@ -244,7 +241,7 @@ async function loadSummaryStats() {
 
             const totalDraft = listDataWarga.filter(r => r.status === 'DRAFT').length;
             
-            // 🎯 FIX UTAMA: Memasukkan status REPORTED dan VERIFIED ke hitungan "Diproses"
+            // Memasukkan status REPORTED dan VERIFIED ke hitungan "Diproses"
             const totalDiproses = listDataWarga.filter(r => 
                 r.status === 'DIPROSES' || 
                 r.status === 'IN_PROGRESS' || 
@@ -254,29 +251,27 @@ async function loadSummaryStats() {
             
             const totalSelesai = listDataWarga.filter(r => r.status === 'SELESAI' || r.status === 'RESOLVED').length;
 
-            // Fungsi pembantu adaptif untuk mengupdate elemen angka di sidebar
-            const applyStatValue = (elementId, labelKeyword, finalValue) => {
-                let el = document.getElementById(elementId);
-                if (el) {
-                    el.innerText = finalValue;
-                    return;
-                }
-                const listItems = document.querySelectorAll('.list-group-item, li, div');
-                for (let item of listItems) {
-                    if (item.textContent.toLowerCase().includes(labelKeyword.toLowerCase())) {
-                        let badge = item.querySelector('.badge') || item.querySelector('span:last-child');
-                        if (badge) {
-                            badge.innerText = finalValue;
-                            break;
-                        }
+            // 🎯 FIX UTAMA: Pindaan Eksklusif Berbasis Kombinasi Anti-Overwrite Container luar
+            const listItems = document.querySelectorAll('.list-group-item, li, div, p, span');
+            listItems.forEach(item => {
+                const text = item.textContent || "";
+                let badge = item.querySelector('.badge') || item.querySelector('span:last-child');
+                
+                if (badge) {
+                    // Baris Draft murni (tidak boleh mengandung kata diproses/selesai agar container luar tidak ikut me-render balik)
+                    if (text.includes('Draft') && !text.includes('Diproses') && !text.includes('Selesai')) {
+                        badge.innerText = totalDraft;
+                    }
+                    // Baris Diproses murni
+                    if (text.includes('Diproses') && !text.includes('Draft') && !text.includes('Selesai')) {
+                        badge.innerText = totalDiproses;
+                    }
+                    // Baris Selesai murni
+                    if (text.includes('Selesai') && !text.includes('Draft') && !text.includes('Diproses')) {
+                        badge.innerText = totalSelesai;
                     }
                 }
-            };
-
-            // Suntik datanya ke komponen antarmuka sidebar kiri
-            applyStatValue('countDraft', 'Draft', totalDraft);
-            applyStatValue('countDiproses', 'Diproses', totalDiproses);
-            applyStatValue('countSelesai', 'Selesai', totalSelesai);
+            });
         }
     } catch (err) {
         console.error('Kalkulasi rekap stats gagal:', err);
