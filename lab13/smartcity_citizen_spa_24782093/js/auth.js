@@ -20,15 +20,27 @@ function setupLoginForm() {
             const data = await response.json();
 
             if (response.status === 200) {
+                // Reset data login lama sebelum menyimpan sesi baru
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                localStorage.removeItem('username');
+                localStorage.removeItem('user');
+                localStorage.removeItem('role');
+                localStorage.removeItem('is_superuser');
+
                 // Simpan access dan refresh token dengan sukses ke localStorage 
                 localStorage.setItem('access_token', data.access);
                 localStorage.setItem('refresh_token', data.refresh);
                 localStorage.setItem('username', usernameInput);
+                localStorage.setItem('user', usernameInput);
+                localStorage.setItem('role', 'citizen');
+                localStorage.setItem('is_superuser', 'false');
 
                 if (data.username) {
                     localStorage.setItem('username', data.username);
+                    localStorage.setItem('user', data.username);
                 }
-                if (typeof data.role === 'string') {
+                if (typeof data.role === 'string' && data.role.trim() !== '') {
                     localStorage.setItem('role', data.role);
                 }
                 if (typeof data.is_superuser === 'boolean') {
