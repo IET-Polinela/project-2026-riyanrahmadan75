@@ -12,12 +12,22 @@ function initDashboardPage() {
     const modalEl = document.getElementById('reportModal');
     if (modalEl) bsModalInstance = new bootstrap.Modal(modalEl);
 
-    // 🛠️ Gunakan properti .onclick agar handler lama otomatis ditimpa dan tidak menduplikasi request
+    // 🛠️ FIX 1: Tambahkan e.preventDefault() agar link SPA tidak melakukan reload/reset state
     const tabMyReports = document.getElementById('tabMyReports');
-    if (tabMyReports) tabMyReports.onclick = (e) => switchTab('my_reports', e.currentTarget);
+    if (tabMyReports) {
+        tabMyReports.onclick = (e) => {
+            e.preventDefault(); 
+            switchTab('my_reports', e.currentTarget);
+        };
+    }
 
     const tabFeed = document.getElementById('tabFeed');
-    if (tabFeed) tabFeed.onclick = (e) => switchTab('feed', e.currentTarget);
+    if (tabFeed) {
+        tabFeed.onclick = (e) => {
+            e.preventDefault(); 
+            switchTab('feed', e.currentTarget);
+        };
+    }
 
     // Bind Event Click untuk memicu pembukaan Modal Laporan Baru kosong (POST)
     const btnBukaModalBaru = document.getElementById('btnBukaModalBaru');
@@ -45,9 +55,14 @@ function switchTab(tabName, element) {
     currentTab = tabName;
     currentPage = 1; // Reset halaman ke 1 setiap ganti kategori tab
     
-    document.getElementById('tabMyReports').classList.remove('active');
-    document.getElementById('tabFeed').classList.remove('active');
-    element.classList.add('active');
+    // Amankan selektor dengan memastikan elemennya ada sebelum memanipulasi class list
+    const elMyReports = document.getElementById('tabMyReports');
+    const elFeed = document.getElementById('tabFeed');
+    
+    if (elMyReports) elMyReports.classList.remove('active');
+    if (elFeed) elFeed.classList.remove('active');
+    
+    if (element) element.classList.add('active');
 
     loadDashboardData(currentTab, currentPage);
 }
@@ -64,21 +79,24 @@ async function loadDashboardData(tab, page) {
         if (response && response.status === 200) {
             const data = await response.json();
             
-            // INSTRUKSI 1: Ekstraksi Data Paginasi (Destructuring)
+            // EKSTRAKSI DATA PAGINASI
             allReports = data.results || [];
             const totalCount = data.count || 0;
             const totalPages = Math.ceil(totalCount / 10); // Batasan pembagian 10 data per halaman
 
-            // INSTRUKSI 2: Sinkronisasi Antarmuka Antrean Layar
+            // SINKRONISASI ANTARMUKA LAYAR
             renderList();
             renderPagination(totalPages);
             loadSummaryStats(); // Perbarui rekap angka sidebar kiri
         } else {
-            document.getElementById('listContainer').innerHTML = `
-                <div class="col-12 text-center text-muted p-5">
-                    <i class="bi bi-exclamation-triangle fs-1 text-danger"></i>
-                    <p class="mt-2 fw-bold">Gagal memuat data laporan dari server.</p>
-                </div>`;
+            const container = document.getElementById('listContainer');
+            if (container) {
+                container.innerHTML = `
+                    <div class="col-12 text-center text-muted p-5">
+                        <i class="bi bi-exclamation-triangle fs-1 text-danger"></i>
+                        <p class="mt-2 fw-bold">Gagal memuat data laporan dari server.</p>
+                    </div>`;
+            }
         }
     } catch (err) {
         console.error('Eror muat dashboard data:', err);
@@ -88,38 +106,36 @@ async function loadDashboardData(tab, page) {
 function renderList() {
     const container = document.getElementById('listContainer');
     if (!container) return;
-    container.innerHTML = "";
+    container.innerHTML = ""; // Bersihkan sisa renderan tab sebelumnya
 
     if (allReports.length === 0) {
         container.innerHTML = `
             <div class="col-12 text-center text-muted p-5 bg-white rounded shadow-sm">
                 <i class="bi bi-inbox fs-1 mb-2"></i>
-                <h6 class="fw-bold">Belum ada aduan warga di kategori ini.</h6>
+                <h6 class="fw-bold m-0 text-secondary">Belum ada aduan warga di kategori ini.</h6>
             </div>`;
         return;
     }
 
     allReports.forEach(report => {
-        // [Di dalam fungsi renderList bagian loop allReports.forEach]
+        // Logika Dinamis indikasi tebal lebar Progress Bar & Style Badge
+        let progressWidth = "25%";
+        let progressColor = "bg-secondary";
+        let badgeStyle = "bg-secondary";
 
-// Logika Dinamis indikasi tebal lebar Progress Bar & Style Badge (Mendukung versi Inggris & Indonesia)
-let progressWidth = "25%";
-let progressColor = "bg-secondary";
-let badgeStyle = "bg-secondary";
-
-if (report.status === 'REPORTED' || report.status === 'VERIFIED') {
-    progressWidth = "50%"; 
-    progressColor = "bg-info text-dark"; 
-    badgeStyle = "bg-info text-dark";
-} else if (report.status === 'DIPROSES' || report.status === 'IN_PROGRESS') {
-    progressWidth = "75%"; 
-    progressColor = "bg-primary"; 
-    badgeStyle = "bg-primary";
-} else if (report.status === 'SELESAI' || report.status === 'RESOLVED') {
-    progressWidth = "100%"; 
-    progressColor = "bg-success"; 
-    badgeStyle = "bg-success"; // Otomatis berubah hijau jika RESOLVED
-}
+        if (report.status === 'REPORTED' || report.status === 'VERIFIED') {
+            progressWidth = "50%"; 
+            progressColor = "bg-info text-dark"; 
+            badgeStyle = "bg-info text-dark";
+        } else if (report.status === 'DIPROSES' || report.status === 'IN_PROGRESS') {
+            progressWidth = "75%"; 
+            progressColor = "bg-primary"; 
+            badgeStyle = "bg-primary";
+        } else if (report.status === 'SELESAI' || report.status === 'RESOLVED') {
+            progressWidth = "100%"; 
+            progressColor = "bg-success"; 
+            badgeStyle = "bg-success"; 
+        }
 
         // Tombol Edit hanya dimunculkan jika statusnya DRAFT dan milik user yang sedang aktif login
         const tombolEditHtml = (report.status === 'DRAFT' && report.is_owner) ? 
@@ -129,12 +145,12 @@ if (report.status === 'REPORTED' || report.status === 'VERIFIED') {
 
         const cardTemplate = `
             <div class="col-12">
-                <div class="card border-0 shadow-sm p-4 position-relative rounded-3">
+                <div class="card border-0 shadow-sm p-4 position-relative rounded-3 mb-3">
                     <span class="badge ${badgeStyle} position-absolute top-0 end-0 m-4 fw-bold p-2">${report.status}</span>
                     <h5 class="fw-bold mb-1 text-primary pe-5">${report.title}</h5>
                     <p class="text-muted small mb-2">
                         <i class="bi bi-person-circle me-1"></i>Pelapor: <b>${report.reporter || 'Anonim'}</b> | 
-                        <i class="bi bi-geo-alt-fill text-danger me-1"></i>Lokasi: ${report.location}
+                        <i class="bi Geo-alt-fill text-danger me-1"></i>Lokasi: ${report.location}
                     </p>
                     <p class="text-secondary small mb-3">${report.description}</p>
                     
@@ -154,15 +170,13 @@ if (report.status === 'REPORTED' || report.status === 'VERIFIED') {
     });
 }
 
-// 🔥 LOGIKA BARU: PAGINASI PINTAR (SLIDING WINDOW) AGAR TIDAK MELUBER KELUAR LAYAR
 function renderPagination(totalPages) {
     const container = document.getElementById('paginationContainer');
     if (!container) return;
     container.innerHTML = "";
 
-    if (totalPages <= 1) return; // Menyembunyikan paginasi jika hanya ada 1 halaman
+    if (totalPages <= 1) return; 
 
-    // Mengatur jendela halaman aktif (Maksimal menampilkan 5 tombol angka di layar)
     let maxLeft = (currentPage - 2);
     let maxRight = (currentPage + 2);
 
@@ -176,7 +190,6 @@ function renderPagination(totalPages) {
         maxLeft = Math.max(1, totalPages - 4);
     }
 
-    // 1. Tombol lompat ke halaman "Awal"
     if (maxLeft > 1) {
         container.innerHTML += `
             <li class="page-item">
@@ -184,7 +197,6 @@ function renderPagination(totalPages) {
             </li>`;
     }
 
-    // 2. Loop Menggambar Angka Paginasi Terbatas
     for (let i = maxLeft; i <= maxRight; i++) {
         const kelasAktif = i === currentPage ? 'active' : '';
         const itemPaginasi = `
@@ -194,7 +206,6 @@ function renderPagination(totalPages) {
         container.innerHTML += itemPaginasi;
     }
 
-    // 3. Tombol lompat ke halaman "Akhir"
     if (maxRight < totalPages) {
         container.innerHTML += `
             <li class="page-item">
@@ -203,46 +214,40 @@ function renderPagination(totalPages) {
     }
 }
 
-// ==================== 2. MENGHITUNG STATISTIK SIDEBAR (BYPASS PAGINATION) ====================
 async function loadSummaryStats() {
     try {
-        // Trik bypass batasan halaman menggunakan limit parameter yang diatur sengaja sangat besar
         const response = await requestAPI(`/api/reports/?tab=my_reports&page_size=1000`, 'GET');
         if (response && response.status === 200) {
-           // [Di dalam fungsi loadSummaryStats bagian response status === 200]
-const data = await response.json();
-const listDataWarga = data.results || [];
+            const data = await response.json();
+            const listDataWarga = data.results || [];
 
-// Memanfaatkan manipulasi array dengan toleransi dua bahasa status
-const totalDraft = listDataWarga.filter(r => r.status === 'DRAFT').length;
-const totalDiproses = listDataWarga.filter(r => r.status === 'DIPROSES' || r.status === 'IN_PROGRESS').length;
-const totalSelesai = listDataWarga.filter(r => r.status === 'SELESAI' || r.status === 'RESOLVED').length;
+            const totalDraft = listDataWarga.filter(r => r.status === 'DRAFT').length;
+            const totalDiproses = listDataWarga.filter(r => r.status === 'DIPROSES' || r.status === 'IN_PROGRESS').length;
+            const totalSelesai = listDataWarga.filter(r => r.status === 'SELESAI' || r.status === 'RESOLVED').length;
 
-if (document.getElementById('countDraft')) document.getElementById('countDraft').innerText = totalDraft;
-if (document.getElementById('countDiproses')) document.getElementById('countDiproses').innerText = totalDiproses;
-if (document.getElementById('countSelesai')) document.getElementById('countSelesai').innerText = totalSelesai;
+            if (document.getElementById('countDraft')) document.getElementById('countDraft').innerText = totalDraft;
+            if (document.getElementById('countDiproses')) document.getElementById('countDiproses').innerText = totalDiproses;
+            if (document.getElementById('countSelesai')) document.getElementById('countSelesai').innerText = totalSelesai;
         }
     } catch (err) {
         console.error('Kalkulasi rekap stats gagal:', err);
     }
 }
 
-// ==================== 3. MANAGEMENT MODAL FORMULIR (POST & PUT) ====================
 async function editDraft(id) {
-    editingReportId = id; // Isi variabel global dengan id objek draft yang di klik
+    editingReportId = id; 
     try {
         const response = await requestAPI(`/api/reports/${id}/`, 'GET');
         if (response && response.status === 200) {
             const dataLama = await response.json();
             
-            // Isi otomatis kolom formulir dengan data lama aduan draft
             document.getElementById('reportTitle').value = dataLama.title;
             document.getElementById('reportCategory').value = dataLama.category;
             document.getElementById('reportLocation').value = dataLama.location;
             document.getElementById('reportDescription').value = dataLama.description;
 
             document.getElementById('reportModalLabel').innerHTML = `<i class="bi bi-pencil-square me-2"></i>Edit Draft Laporan`;
-            bsModalInstance.show(); // Tampilkan pop-up modal
+            bsModalInstance.show(); 
         }
     } catch (err) {
         alert("Eror memuat data draft laporan warga.");
@@ -266,7 +271,6 @@ async function handleSaveReport(targetStatus) {
     let linkEndpoint = '/api/reports/';
     let metodeHTTP = 'POST';
 
-    // Jika global variabel terisi ID, ubah rute dan metode secara dinamis menjadi PUT (Kasus Edit)
     if (editingReportId !== null) {
         linkEndpoint = `/api/reports/${editingReportId}/`;
         metodeHTTP = 'PUT';
@@ -277,11 +281,10 @@ async function handleSaveReport(targetStatus) {
         if (response && (response.status === 201 || response.status === 200)) {
             alert(editingReportId === null ? "Laporan berhasil didaftarkan!" : "Draft laporan sukses diperbarui!");
             
-            bsModalInstance.hide(); // Tutup pop-up modal form
+            bsModalInstance.hide(); 
             document.getElementById('reportForm').reset();
-            editingReportId = null; // Kembalikan nilai global id ke null
+            editingReportId = null; 
             
-            // Ambil ulang data lokal agar antarmuka diperbarui secara instan tanpa trigger window reload
             loadDashboardData(currentTab, 1);
         } else {
             const dataEror = await response.json();
