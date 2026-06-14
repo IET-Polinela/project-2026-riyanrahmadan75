@@ -65,26 +65,50 @@ function switchTab(tabName, element) {
     loadDashboardData(currentTab, currentPage);
 }
 
-// ==================== 1. FETCHING DATA TERPAGINASI ====================
+// ==================== 1. FETCHING DATA & PAGINASI PINTAR (ANTI-MELUBER) ====================
 async function loadDashboardData(tab, page) {
     currentTab = tab;
     currentPage = page;
 
     try {
-        const response = await requestAPI(`/api/reports/?tab=${tab}&page=${page}`, 'GET');
+        // 🎯 trik bypass limit server: Jika tab Laporan Saya, ambil data agak besar agar bisa disaring akurat di frontend
+        const url = tab === 'my_reports' 
+            ? `/api/reports/?tab=my_reports&page_size=1000` 
+            : `/api/reports/?tab=${tab}&page=${page}`;
+
+        const response = await requestAPI(url, 'GET');
         
         if (response && response.status === 200) {
             const data = await response.json();
+            let rawResults = data.results || [];
             
-            // EKSTRAKSI DATA
-            allReports = data.results || [];
-            const totalCount = data.count || 0;
-            const totalPages = Math.ceil(totalCount / 10); 
-
-            // SINKRONISASI ANTARMUKA LAYAR
-            renderList();
-            renderPagination(totalPages);
-            loadSummaryStats(); // Perbarui rekap angka sidebar kiri
+            if (tab === 'my_reports') {
+                // 1. Saring paksa hanya laporan yang pelapornya murni 'riyan'
+                const filteredReports = rawResults.filter(report => report.reporter === 'riyan');
+                
+                // 2. Hitung total halaman asli murni milik riyan (bukan total seluruh kota)
+                const totalCount = filteredReports.length;
+                const totalPages = Math.ceil(totalCount / 10);
+                
+                // 3. Potong data (Slice) dinamis berdasarkan halaman aktif saat ini
+                const startIndex = (page - 1) * 10;
+                const endIndex = startIndex + 10;
+                allReports = filteredReports.slice(startIndex, endIndex);
+                
+                // Gambar ke layar
+                renderList();
+                renderPagination(totalPages);
+            } else {
+                // Untuk Tab Feed Kota (Publik), biarkan menggunakan paginasi bawaan server normal
+                allReports = rawResults;
+                const totalCount = data.count || 0;
+                const totalPages = Math.ceil(totalCount / 10);
+                
+                renderList();
+                renderPagination(totalPages);
+            }
+            
+            loadSummaryStats(); // Jalankan sinkronisasi angka statistik sidebar kiri
         } else {
             const container = document.getElementById('listContainer');
             if (container) {
@@ -103,18 +127,9 @@ async function loadDashboardData(tab, page) {
 function renderList() {
     const container = document.getElementById('listContainer');
     if (!container) return;
-    container.innerHTML = ""; // Kosongkan wadah HTML terlebih dahulu
+    container.innerHTML = ""; 
 
-    // 🎯 FIX UTAMA: Filter paksa di browser laptopmu (Bypass Eror Server Kampus)
-    let reportsToRender = allReports;
-    if (currentTab === 'my_reports') {
-        // Hanya loloskan laporan yang nama pelapornya murni string 'riyan'
-        // Laporan milik Farrel dan beat otomatis DIBUANG dari antrean render tab ini!
-        reportsToRender = allReports.filter(report => report.reporter === 'riyan');
-    }
-
-    // Jika setelah difilter hasilnya kosong (Kondisi saat kamu belum membuat aduan resmi)
-    if (reportsToRender.length === 0) {
+    if (allReports.length === 0) {
         container.innerHTML = `
             <div class="col-12 text-center text-muted p-5 bg-white rounded shadow-sm my-2">
                 <i class="bi bi-inbox fs-1 mb-2 text-secondary"></i>
@@ -123,7 +138,7 @@ function renderList() {
         return;
     }
 
-    reportsToRender.forEach(report => {
+    allReports.forEach(report => {
         let progressWidth = "25%";
         let progressColor = "bg-secondary";
         let badgeStyle = "bg-secondary";
@@ -218,12 +233,15 @@ function renderPagination(totalPages) {
     }
 }
 
+// ==================== 2. MENGHITUNG STATISTIK SIDEBAR (MURNI PUNYA RIYAN) ====================
 async function loadSummaryStats() {
     try {
         const response = await requestAPI(`/api/reports/?tab=my_reports&page_size=1000`, 'GET');
         if (response && response.status === 200) {
             const data = await response.json();
-            const listDataWarga = data.results || [];
+            
+            // 🎯 FIX STATS: Saring murni hanya laporan yang pelapornya adalah 'riyan'
+            const listDataWarga = (data.results || []).filter(r => r.reporter === 'riyan');
 
             const totalDraft = listDataWarga.filter(r => r.status === 'DRAFT').length;
             const totalDiproses = listDataWarga.filter(r => r.status === 'DIPROSES' || r.status === 'IN_PROGRESS').length;
@@ -238,6 +256,7 @@ async function loadSummaryStats() {
     }
 }
 
+// ==================== 3. MANAGEMENT MODAL FORMULIR ====================
 async function editDraft(id) {
     editingReportId = id; 
     try {
