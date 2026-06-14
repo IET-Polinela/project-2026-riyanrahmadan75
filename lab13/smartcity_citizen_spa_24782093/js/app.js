@@ -7,7 +7,7 @@ let editingReportId = null;
 let allReports = [];
 let bsModalInstance = null; // Menyimpan instansiasi objek Bootstrap Modal Form
 
-// 🎯 FIX GLOBAL DELEGATION: Memastikan klik tombol tab tidak macet akibat siklus re-render router SPA
+// 🎯 GLOBAL DELEGATION: Memastikan klik tombol tab tidak macet akibat siklus re-render router SPA
 document.addEventListener('click', function (e) {
     const tabMyReports = e.target.closest('#tabMyReports');
     if (tabMyReports) {
@@ -191,7 +191,7 @@ function renderList() {
 function renderPagination(totalPages) {
     const container = document.getElementById('paginationContainer');
     if (!container) return;
-    container.innerHTML = ""; // Bersihkan sisa halaman lama
+    container.innerHTML = ""; 
 
     if (totalPages <= 1) return; 
 
@@ -239,11 +239,19 @@ async function loadSummaryStats() {
         if (response && response.status === 200) {
             const data = await response.json();
             
-            // 🎯 Saring murni hanya laporan yang dibuat oleh 'riyan'
+            // Saring murni hanya laporan yang dibuat oleh 'riyan'
             const listDataWarga = (data.results || []).filter(r => r.reporter === 'riyan');
 
             const totalDraft = listDataWarga.filter(r => r.status === 'DRAFT').length;
-            const totalDiproses = listDataWarga.filter(r => r.status === 'DIPROSES' || r.status === 'IN_PROGRESS').length;
+            
+            // 🎯 FIX UTAMA: Memasukkan status REPORTED dan VERIFIED ke hitungan "Diproses"
+            const totalDiproses = listDataWarga.filter(r => 
+                r.status === 'DIPROSES' || 
+                r.status === 'IN_PROGRESS' || 
+                r.status === 'REPORTED' || 
+                r.status === 'VERIFIED'
+            ).length;
+            
             const totalSelesai = listDataWarga.filter(r => r.status === 'SELESAI' || r.status === 'RESOLVED').length;
 
             // Fungsi pembantu adaptif untuk mengupdate elemen angka di sidebar
@@ -253,7 +261,6 @@ async function loadSummaryStats() {
                     el.innerText = finalValue;
                     return;
                 }
-                // Jika ID tidak ditemukan, cari elemen HTML berdasarkan kemiripan teks di layar
                 const listItems = document.querySelectorAll('.list-group-item, li, div');
                 for (let item of listItems) {
                     if (item.textContent.toLowerCase().includes(labelKeyword.toLowerCase())) {
@@ -266,7 +273,7 @@ async function loadSummaryStats() {
                 }
             };
 
-            // Suntik paksa datanya ke tampilan komponen
+            // Suntik datanya ke komponen antarmuka sidebar kiri
             applyStatValue('countDraft', 'Draft', totalDraft);
             applyStatValue('countDiproses', 'Diproses', totalDiproses);
             applyStatValue('countSelesai', 'Selesai', totalSelesai);
