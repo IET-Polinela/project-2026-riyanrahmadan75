@@ -44,8 +44,39 @@ function initDashboardPage() {
     const btnSubmit = document.getElementById('btnSubmit');
     if (btnSubmit) btnSubmit.onclick = () => handleSaveReport('REPORTED');
 
-    // Jalankan penarikan data perdana saat dashboard berhasil di-load
+    // 🎯 TAMPILKAN INDIKATOR ROLE DI NAVBAR KANAN
+    renderUserRole();
+
+    // Jalankan penarikan data aduan
     loadDashboardData(currentTab, currentPage);
+}
+
+// 🎯 FUNGSI BARU: Menggambar Tanda Login Citizen / Admin di Pojok Kanan Navbar
+function renderUserRole() {
+    const navMenus = document.getElementById('nav-menus');
+    if (!navMenus) return;
+
+    // Ambil data user yang sedang aktif dari sistem auth/localStorage
+    const username = localStorage.getItem('username') || 'riyan';
+    const role = localStorage.getItem('role') || 'citizen'; 
+
+    let badgeColor = 'bg-light text-primary';
+    let roleLabel = 'Citizen (Warga)';
+
+    // Jika username atau role mendeteksi admin/petugas
+    if (role.toLowerCase() === 'admin' || role.toLowerCase() === 'petugas' || username.toLowerCase() === 'admin') {
+        badgeColor = 'bg-danger text-white';
+        roleLabel = 'Admin (Petugas)';
+    }
+
+    // Suntikkan komponen badge ke dalam navbar milik index.html
+    navMenus.innerHTML = `
+        <div class="d-flex align-items-center gap-2 bg-dark bg-opacity-25 px-3 py-1 rounded-pill text-white">
+            <i class="bi bi-person-circle fs-5"></i>
+            <span class="fw-bold small">${username}</span>
+            <span class="badge ${badgeColor} fw-bold small text-uppercase px-2" style="font-size: 0.75rem;">${roleLabel}</span>
+        </div>
+    `;
 }
 
 function switchTab(tabName, element) {
@@ -142,21 +173,27 @@ function renderList() {
         let progressColor = "bg-secondary";
         let badgeStyle = "bg-secondary";
 
-        if (report.status === 'REPORTED' || report.status === 'VERIFIED') {
+        const currentStatus = String(report.status).toUpperCase().trim();
+
+        if (currentStatus === 'REPORTED' || currentStatus === 'VERIFIED') {
             progressWidth = "50%"; 
             progressColor = "bg-info text-dark"; 
             badgeStyle = "bg-info text-dark";
-        } else if (report.status === 'DIPROSES' || report.status === 'IN_PROGRESS') {
+        } else if (currentStatus === 'DIPROSES' || currentStatus === 'IN_PROGRESS') {
             progressWidth = "75%"; 
             progressColor = "bg-primary"; 
             badgeStyle = "bg-primary";
-        } else if (report.status === 'SELESAI' || report.status === 'RESOLVED') {
+        } else if (currentStatus === 'SELESAI' || currentStatus === 'RESOLVED') {
             progressWidth = "100%"; 
             progressColor = "bg-success"; 
             badgeStyle = "bg-success"; 
         }
 
-        const tombolEditHtml = (report.status === 'DRAFT' && report.is_owner) ? 
+        // Anonimitas cerdas berdasarkan status dokumen aduan
+        const rawReporter = typeof report.reporter === 'object' && report.reporter !== null ? report.reporter.username : report.reporter;
+        const displayReporter = (currentStatus === 'DRAFT') ? (rawReporter || 'Anonim') : 'Anonim';
+
+        const tombolEditHtml = (currentStatus === 'DRAFT' && report.is_owner) ? 
             `<button class="btn btn-sm btn-outline-warning fw-bold mt-3" onclick="editDraft(${report.id})">
                 <i class="bi bi-pencil-square me-1"></i>Edit Draft
              </button>` : '';
@@ -167,7 +204,7 @@ function renderList() {
                     <span class="badge ${badgeStyle} position-absolute top-0 end-0 m-4 fw-bold p-2">${report.status}</span>
                     <h5 class="fw-bold mb-1 text-primary pe-5">${report.title}</h5>
                     <p class="text-muted small mb-2">
-                        <i class="bi bi-person-circle me-1"></i>Pelapor: <b>${report.reporter || 'Anonim'}</b> | 
+                        <i class="bi bi-person-circle me-1"></i>Pelapor: <b>${displayReporter}</b> | 
                         <i class="bi bi-geo-alt-fill text-danger me-1"></i>Lokasi: ${report.location}
                     </p>
                     <p class="text-secondary small mb-3">${report.description}</p>
@@ -259,7 +296,7 @@ async function loadSummaryStats() {
                 }
             });
 
-            // 🎯 FIX UTAMA: Menggunakan sistem Rantai Mandiri (else if) untuk mencegah overwrite container luar
+            // Menggunakan sistem Rantai Mandiri (else if) untuk mencegah overwrite container luar
             const listItems = document.querySelectorAll('.list-group-item, li, div, p, span');
             listItems.forEach(item => {
                 const text = item.textContent || "";
