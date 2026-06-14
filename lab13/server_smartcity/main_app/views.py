@@ -23,35 +23,33 @@ class ReportPagination(PageNumberPagination):
 
 class ReportViewSet(viewsets.ModelViewSet):
     serializer_class = ReportSerializer
-    # 🎯 PERBAIKAN: Kembalikan pembungkus data ini karena JS Frontend kamu sangat membutuhkannya!
     pagination_class = ReportPagination
     permission_classes = [AllowAny]
 
     def get_queryset(self):
         user = self.request.user
+        # Mengurutkan dari yang paling baru diperbarui/dibuat
         queryset = Report.objects.all().order_by('-updated_at')
         tab = self.request.query_params.get('tab', None)
         
         if tab == 'my_reports':
+            # 🔒 TAB LAPORAN SAYA: Hanya menampilkan laporan milik user yang sedang login
             if user.is_authenticated:
-                queryset = queryset.filter(reporter=user)
+                return queryset.filter(reporter=user)
             else:
-                queryset = Report.objects.none()
+                return Report.objects.none()
                 
         elif tab == 'feed':
-            if user.is_authenticated:
-                queryset = queryset.exclude(reporter=user).exclude(status='DRAFT')
-            else:
-                # Loloskan semua aduan publik untuk pengunjung luar (Anonim)
-                queryset = queryset.exclude(status='DRAFT')
+            # 🔓 TAB FEED KOTA (PUBLIK): Menampilkan semua aduan masyarakat yang bukan DRAFT
+            # Termasuk aduan milik kita sendiri yang sudah dipublikasikan
+            return queryset.exclude(status='DRAFT')
                 
         else:
+            # Jalur alternatif jika parameter tab tidak dikirim oleh frontend
             if user.is_authenticated:
-                queryset = queryset.exclude(status='DRAFT') | queryset.filter(status='DRAFT', reporter=user)
+                return queryset.filter(Q(reporter=user) | ~Q(status='DRAFT'))
             else:
-                queryset = queryset.exclude(status='DRAFT')
-                
-        return queryset
+                return queryset.exclude(status='DRAFT')
 
     def perform_create(self, serializer):
         serializer.save(reporter=self.request.user)

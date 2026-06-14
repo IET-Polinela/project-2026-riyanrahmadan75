@@ -8,7 +8,13 @@ SECRET_KEY = 'django-insecure-your-key'
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS = ['http://103.151.63.88:8010']
+
+# Ditambahkan domain github pages agar aman saat melakukan POST/Daftar laporan baru
+CSRF_TRUSTED_ORIGINS = [
+    'http://103.151.63.88:8010',
+    'https://iet-polinela.github.io' 
+]
+
 # ========================
 # INSTALLED APPS
 # ========================
@@ -51,7 +57,11 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
+    # 👇 TAMBAHAN BARU: Sinkronisasi Pagination agar sesuai dengan Frontend hasil Pull
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
 }
+
 # ========================
 # MIDDLEWARE
 # ========================
@@ -97,15 +107,15 @@ POSTGRES_DB = os.environ.get('POSTGRES_DB')
 
 if POSTGRES_DB:
     DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'db_mhs10',         # Sesuai format db_mhsXX
-        'USER': 'user_mhs10',       # Sesuai format user_mhsXX
-        'PASSWORD': 'mhs10',        # Sesuai format mhsXX
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'db_mhs10',         # Sesuai format db_mhsXX
+            'USER': 'user_mhs10',       # Sesuai format user_mhsXX
+            'PASSWORD': 'mhs10',        # Sesuai format mhsXX
+            'HOST': '127.0.0.1',
+            'PORT': '5432',
+        }
     }
-}
 else:
     DATABASES = {
         'default': {
@@ -156,5 +166,5 @@ LOGOUT_REDIRECT_URL = '/login/' # Konsisten menggunakan slash di awal dan akhir
 # PENGATURAN TAMBAHAN
 # ========================
 # Konfigurasi REST Framework telah didefinisikan di atas.
-# CORS Settings [cite: 128]
-CORS_ALLOW_ALL_ORIGINS = True # Mengizinkan semua domain lokal/testing mengakses API [cite: 129, 130]
+# CORS Settings 
+CORS_ALLOW_ALL_ORIGINS = True # Mengizinkan semua domain lokal/testing mengakses API
