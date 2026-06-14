@@ -7,27 +7,25 @@ let editingReportId = null;
 let allReports = [];
 let bsModalInstance = null; // Menyimpan instansiasi objek Bootstrap Modal Form
 
+// 🎯 FIX GLOBAL DELEGATION: Memastikan klik tombol tab tidak macet akibat siklus re-render router SPA
+document.addEventListener('click', function (e) {
+    const tabMyReports = e.target.closest('#tabMyReports');
+    if (tabMyReports) {
+        e.preventDefault();
+        switchTab('my_reports', tabMyReports);
+    }
+
+    const tabFeed = e.target.closest('#tabFeed');
+    if (tabFeed) {
+        e.preventDefault();
+        switchTab('feed', tabFeed);
+    }
+});
+
 function initDashboardPage() {
     // Daftarkan instansiasi Bootstrap Modal secara manual ke objek DOM JavaScript
     const modalEl = document.getElementById('reportModal');
     if (modalEl) bsModalInstance = new bootstrap.Modal(modalEl);
-
-    // Gunakan e.preventDefault() agar link SPA tidak melakukan reload/reset state
-    const tabMyReports = document.getElementById('tabMyReports');
-    if (tabMyReports) {
-        tabMyReports.onclick = (e) => {
-            e.preventDefault(); 
-            switchTab('my_reports', e.currentTarget);
-        };
-    }
-
-    const tabFeed = document.getElementById('tabFeed');
-    if (tabFeed) {
-        tabFeed.onclick = (e) => {
-            e.preventDefault(); 
-            switchTab('feed', e.currentTarget);
-        };
-    }
 
     // Bind Event Click untuk memicu pembukaan Modal Laporan Baru kosong (POST)
     const btnBukaModalBaru = document.getElementById('btnBukaModalBaru');
@@ -71,7 +69,7 @@ async function loadDashboardData(tab, page) {
     currentPage = page;
 
     try {
-        // 🎯 trik bypass limit server: Jika tab Laporan Saya, ambil data agak besar agar bisa disaring akurat di frontend
+        // Trik bypass batasan halaman server jika membuka tab personal
         const url = tab === 'my_reports' 
             ? `/api/reports/?tab=my_reports&page_size=1000` 
             : `/api/reports/?tab=${tab}&page=${page}`;
@@ -95,11 +93,11 @@ async function loadDashboardData(tab, page) {
                 const endIndex = startIndex + 10;
                 allReports = filteredReports.slice(startIndex, endIndex);
                 
-                // Gambar ke layar
+                // Render ke layar
                 renderList();
                 renderPagination(totalPages);
             } else {
-                // Untuk Tab Feed Kota (Publik), biarkan menggunakan paginasi bawaan server normal
+                // Untuk Tab Feed Kota (Publik), gunakan data asli bawaan server
                 allReports = rawResults;
                 const totalCount = data.count || 0;
                 const totalPages = Math.ceil(totalCount / 10);
@@ -108,7 +106,8 @@ async function loadDashboardData(tab, page) {
                 renderPagination(totalPages);
             }
             
-            loadSummaryStats(); // Jalankan sinkronisasi angka statistik sidebar kiri
+            // Jalankan sinkronisasi angka statistik sidebar kiri murni data riyan
+            loadSummaryStats(); 
         } else {
             const container = document.getElementById('listContainer');
             if (container) {
@@ -192,7 +191,7 @@ function renderList() {
 function renderPagination(totalPages) {
     const container = document.getElementById('paginationContainer');
     if (!container) return;
-    container.innerHTML = "";
+    container.innerHTML = ""; // Bersihkan sisa halaman lama
 
     if (totalPages <= 1) return; 
 
@@ -240,16 +239,37 @@ async function loadSummaryStats() {
         if (response && response.status === 200) {
             const data = await response.json();
             
-            // 🎯 FIX STATS: Saring murni hanya laporan yang pelapornya adalah 'riyan'
+            // 🎯 Saring murni hanya laporan yang dibuat oleh 'riyan'
             const listDataWarga = (data.results || []).filter(r => r.reporter === 'riyan');
 
             const totalDraft = listDataWarga.filter(r => r.status === 'DRAFT').length;
             const totalDiproses = listDataWarga.filter(r => r.status === 'DIPROSES' || r.status === 'IN_PROGRESS').length;
             const totalSelesai = listDataWarga.filter(r => r.status === 'SELESAI' || r.status === 'RESOLVED').length;
 
-            if (document.getElementById('countDraft')) document.getElementById('countDraft').innerText = totalDraft;
-            if (document.getElementById('countDiproses')) document.getElementById('countDiproses').innerText = totalDiproses;
-            if (document.getElementById('countSelesai')) document.getElementById('countSelesai').innerText = totalSelesai;
+            // Fungsi pembantu adaptif untuk mengupdate elemen angka di sidebar
+            const applyStatValue = (elementId, labelKeyword, finalValue) => {
+                let el = document.getElementById(elementId);
+                if (el) {
+                    el.innerText = finalValue;
+                    return;
+                }
+                // Jika ID tidak ditemukan, cari elemen HTML berdasarkan kemiripan teks di layar
+                const listItems = document.querySelectorAll('.list-group-item, li, div');
+                for (let item of listItems) {
+                    if (item.textContent.toLowerCase().includes(labelKeyword.toLowerCase())) {
+                        let badge = item.querySelector('.badge') || item.querySelector('span:last-child');
+                        if (badge) {
+                            badge.innerText = finalValue;
+                            break;
+                        }
+                    }
+                }
+            };
+
+            // Suntik paksa datanya ke tampilan komponen
+            applyStatValue('countDraft', 'Draft', totalDraft);
+            applyStatValue('countDiproses', 'Diproses', totalDiproses);
+            applyStatValue('countSelesai', 'Selesai', totalSelesai);
         }
     } catch (err) {
         console.error('Kalkulasi rekap stats gagal:', err);
