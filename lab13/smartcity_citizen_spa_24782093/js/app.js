@@ -28,7 +28,7 @@ function initDashboardPage() {
     if (modalEl) bsModalInstance = new bootstrap.Modal(modalEl);
 
     // Ambil data user yang sedang aktif dari sistem auth/localStorage
-    const username = localStorage.getItem('username') || 'riyan';
+    const username = localStorage.getItem('username') || localStorage.getItem('user') || '';
     const userRole = localStorage.getItem('role') || ''; 
     const isSuperuser = localStorage.getItem('is_superuser') === 'true';
 
@@ -37,8 +37,7 @@ function initDashboardPage() {
         username.toLowerCase() === 'admin' || 
         userRole.toLowerCase() === 'admin' || 
         userRole.toLowerCase() === 'superuser' ||
-        isSuperuser === true ||
-        username.toLowerCase() === 'riyan' // Akun riyan terdeteksi superuser di database
+        isSuperuser === true
     );
 
     // Bind Event Click untuk memicu pembukaan Modal Laporan Baru kosong (POST)
@@ -79,7 +78,7 @@ function renderUserRole() {
     if (!navMenus) return;
 
     // Ambil data user aktif secara dinamis dari localStorage
-    const username = localStorage.getItem('username') || localStorage.getItem('user') || 'riyan';
+    const username = localStorage.getItem('username') || localStorage.getItem('user') || '';
     const userRole = localStorage.getItem('role') || ''; 
     const isSuperuser = localStorage.getItem('is_superuser') === 'true';
 
@@ -92,8 +91,7 @@ function renderUserRole() {
         username.toLowerCase() === 'admin' || 
         userRole.toLowerCase() === 'admin' || 
         userRole.toLowerCase() === 'superuser' ||
-        isSuperuser === true ||
-        username.toLowerCase() === 'riyan'
+        isSuperuser === true
     ) {
         badgeColor = 'bg-danger text-white';
         roleLabel = 'Admin (Petugas)';
@@ -152,10 +150,11 @@ async function loadDashboardData(tab, page) {
             let rawResults = data.results || [];
             
             if (tab === 'my_reports') {
-                // 1. Saring paksa hanya laporan yang pelapornya murni 'riyan'
+                // 1. Saring laporan milik user yang sedang login
+                const activeUsername = (localStorage.getItem('username') || localStorage.getItem('user') || '').toLowerCase().trim();
                 const filteredReports = rawResults.filter(report => {
                     const name = typeof report.reporter === 'object' && report.reporter !== null ? report.reporter.username : report.reporter;
-                    return String(name).toLowerCase().trim() === 'riyan';
+                    return activeUsername && String(name).toLowerCase().trim() === activeUsername;
                 });
                 
                 // 2. Hitung total halaman asli murni milik riyan
@@ -322,10 +321,12 @@ async function loadSummaryStats() {
             let totalDiproses = 0;
             let totalSelesai = 0;
 
+            const activeUsername = (localStorage.getItem('username') || localStorage.getItem('user') || '').toLowerCase().trim();
             rawResults.forEach(r => {
                 const reporterName = typeof r.reporter === 'object' && r.reporter !== null ? r.reporter.username : r.reporter;
+                const reporterNormalized = String(reporterName || '').toLowerCase().trim();
                 
-                if (String(reporterName).toLowerCase().trim() === 'riyan') {
+                if (activeUsername && reporterNormalized === activeUsername) {
                     const status = String(r.status).toUpperCase().trim();
                     if (status === 'DRAFT') {
                         totalDraft++;

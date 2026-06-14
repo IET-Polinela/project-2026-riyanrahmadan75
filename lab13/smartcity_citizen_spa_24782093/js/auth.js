@@ -23,6 +23,19 @@ function setupLoginForm() {
                 // Simpan access dan refresh token dengan sukses ke localStorage 
                 localStorage.setItem('access_token', data.access);
                 localStorage.setItem('refresh_token', data.refresh);
+                localStorage.setItem('username', usernameInput);
+
+                if (data.username) {
+                    localStorage.setItem('username', data.username);
+                }
+                if (typeof data.role === 'string') {
+                    localStorage.setItem('role', data.role);
+                }
+                if (typeof data.is_superuser === 'boolean') {
+                    localStorage.setItem('is_superuser', data.is_superuser.toString());
+                } else if (typeof data.is_superuser === 'string') {
+                    localStorage.setItem('is_superuser', data.is_superuser);
+                }
 
                 alert('Login Berhasil! Selamat Datang.');
                 window.location.hash = '#dashboard'; // Alihkan rute secara instan ke dashboard 
