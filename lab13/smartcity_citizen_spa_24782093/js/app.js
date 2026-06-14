@@ -27,30 +27,30 @@ function initDashboardPage() {
     const modalEl = document.getElementById('reportModal');
     if (modalEl) bsModalInstance = new bootstrap.Modal(modalEl);
 
-    // Ambil data untuk pengecekan role admin
+    // Ambil data user yang sedang aktif dari sistem auth/localStorage
     const username = localStorage.getItem('username') || 'riyan';
     const userRole = localStorage.getItem('role') || ''; 
     const isSuperuser = localStorage.getItem('is_superuser') === 'true';
 
-    // Cek apakah user saat ini adalah Admin
+    // Pengecekan Mutlak Status Admin (Berdasarkan data shell database kampus)
     const isAdmin = (
         username.toLowerCase() === 'admin' || 
         userRole.toLowerCase() === 'admin' || 
         userRole.toLowerCase() === 'superuser' ||
         isSuperuser === true ||
-        username.toLowerCase() === 'riyan' // Akun Riyan sebagai admin pusat
+        username.toLowerCase() === 'riyan' // Akun riyan terdeteksi superuser di database
     );
 
     // Bind Event Click untuk memicu pembukaan Modal Laporan Baru kosong (POST)
     const btnBukaModalBaru = document.getElementById('btnBukaModalBaru');
     if (btnBukaModalBaru) {
         if (isAdmin) {
-            // Proteksi Tambahan: Jika admin mencoba memicu lewat konsol/shortcut, kunci aksinya
+            // Proteksi Sistem: Blokir aksi jika admin mencoba menembus form
             btnBukaModalBaru.onclick = () => {
                 alert("Akses Ditolak: Akun Admin/Petugas tidak diperbolehkan membuat laporan aduan!");
             };
         } else {
-            // Jika warga (citizen), berikan akses normal ke form laporan
+            // Akses Normal: Berikan form hanya kepada Citizen (Warga) biasa seperti riki, dll.
             btnBukaModalBaru.onclick = () => {
                 editingReportId = null;
                 document.getElementById('reportForm').reset();
@@ -66,20 +66,20 @@ function initDashboardPage() {
     const btnSubmit = document.getElementById('btnSubmit');
     if (btnSubmit) btnSubmit.onclick = () => handleSaveReport('REPORTED');
 
-    // 🎯 TAMPILKAN INDIKATOR ROLE DI NAVBAR KANAN & ATUR TOMBOL ADUAN
+    // 🎯 TAMPILKAN INDIKATOR ROLE DI NAVBAR KANAN & ATUR HAK AKSES TOMBOL
     renderUserRole();
 
     // Jalankan penarikan data aduan
     loadDashboardData(currentTab, currentPage);
 }
 
-// 🎯 FUNGSI UTAMA: Menggambar Tanda Login & Menyembunyikan Tombol Buat Laporan untuk Admin
+// 🎯 FUNGSI UTAMA: Menggambar Tanda Login Dinamis & Mengatur Hak Akses Pembuatan Laporan
 function renderUserRole() {
     const navMenus = document.getElementById('nav-menus');
     if (!navMenus) return;
 
-    // Ambil data user dari localStorage
-    const username = localStorage.getItem('username') || 'riyan';
+    // Ambil data user aktif secara dinamis dari localStorage
+    const username = localStorage.getItem('username') || localStorage.getItem('user') || 'riyan';
     const userRole = localStorage.getItem('role') || ''; 
     const isSuperuser = localStorage.getItem('is_superuser') === 'true';
 
@@ -87,7 +87,7 @@ function renderUserRole() {
     let roleLabel = 'Citizen (Warga)';
     let isAdmin = false;
 
-    // Penentuan Role Berdasarkan Data Login
+    // Validasi penentuan Role Petugas vs Warga biasa
     if (
         username.toLowerCase() === 'admin' || 
         userRole.toLowerCase() === 'admin' || 
@@ -100,17 +100,17 @@ function renderUserRole() {
         isAdmin = true;
     }
 
-    // 🎯 VALIDASI TOMBOL: Sembunyikan tombol "Buat Laporan Baru" jika yang masuk adalah Admin
+    // 🎯 KONTROL VISUAL TOMBOL: Hanya tampilkan tombol "Buat Laporan Baru" jika user adalah Citizen
     const btnBukaModalBaru = document.getElementById('btnBukaModalBaru');
     if (btnBukaModalBaru) {
         if (isAdmin) {
-            btnBukaModalBaru.style.display = 'none'; // Sembunyikan total dari layar
+            btnBukaModalBaru.style.setProperty('display', 'none', 'important'); // Sembunyikan mutlak untuk Admin
         } else {
-            btnBukaModalBaru.style.display = 'block'; // Tampilkan jika warga biasa
+            btnBukaModalBaru.style.setProperty('display', 'block', 'important'); // Tampilkan normal untuk Citizen (Riki, dll)
         }
     }
 
-    // Suntikkan komponen badge ke dalam navbar kanan
+    // Suntikkan komponen badge ke dalam navbar milik index.html dengan nama dinamis variabel ${username}
     navMenus.innerHTML = `
         <div class="d-flex align-items-center gap-2 bg-dark bg-opacity-25 px-3 py-2 rounded-pill text-white shadow-sm">
             <i class="bi bi-person-circle fs-5"></i>
@@ -135,7 +135,7 @@ function switchTab(tabName, element) {
     loadDashboardData(currentTab, currentPage);
 }
 
-// ==================== 1. FETCHING DATA & PAGINASI PINTAR ====================
+// ==================== 1. FETCHING DATA & PAGINASI PINTAR (ANTI-MELUBER) ====================
 async function loadDashboardData(tab, page) {
     currentTab = tab;
     currentPage = page;
@@ -152,15 +152,17 @@ async function loadDashboardData(tab, page) {
             let rawResults = data.results || [];
             
             if (tab === 'my_reports') {
-                // Saring paksa hanya laporan yang pelapornya murni 'riyan'
+                // 1. Saring paksa hanya laporan yang pelapornya murni 'riyan'
                 const filteredReports = rawResults.filter(report => {
                     const name = typeof report.reporter === 'object' && report.reporter !== null ? report.reporter.username : report.reporter;
                     return String(name).toLowerCase().trim() === 'riyan';
                 });
                 
+                // 2. Hitung total halaman asli murni milik riyan
                 const totalCount = filteredReports.length;
                 const totalPages = Math.ceil(totalCount / 10);
                 
+                // 3. Potong data (Slice) dinamis berdasarkan halaman aktif saat ini
                 const startIndex = (page - 1) * 10;
                 const endIndex = startIndex + 10;
                 allReports = filteredReports.slice(startIndex, endIndex);
@@ -176,7 +178,7 @@ async function loadDashboardData(tab, page) {
                 renderPagination(totalPages);
             }
             
-            // Sinkronisasi angka statistik di sidebar kiri
+            // Jalankan sinkronisasi angka statistik sidebar kiri murni data riyan
             loadSummaryStats(); 
         } else {
             const container = document.getElementById('listContainer');
@@ -335,6 +337,7 @@ async function loadSummaryStats() {
                 }
             });
 
+            // Menggunakan sistem Rantai Mandiri (else if) untuk mencegah overwrite container luar
             const listItems = document.querySelectorAll('.list-group-item, li, div, p, span');
             listItems.forEach(item => {
                 const text = item.textContent || "";
