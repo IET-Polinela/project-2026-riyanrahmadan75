@@ -96,6 +96,16 @@ const routes = {
 function handleRouting() {
     const hash = window.location.hash || '#login';
     const contentDiv = document.getElementById('app-content');
+
+    // Pastikan sesi lama bersih saat membuka halaman login
+    if (hash === '#login') {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('username');
+        localStorage.removeItem('user');
+        localStorage.removeItem('role');
+        localStorage.removeItem('is_superuser');
+    }
     
     // Guard Keamanan: Cegah masuk dashboard jika belum punya token
     if (hash === '#dashboard' && !localStorage.getItem('access_token')) {

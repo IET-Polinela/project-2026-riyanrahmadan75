@@ -4,6 +4,9 @@ function setupLoginForm() {
     const form = document.getElementById('loginForm');
     if (!form) return;
 
+    // Pastikan tidak ada sisa sesi admin/citizen lama saat masuk ke halaman login
+    localStorage.clear();
+
     form.addEventListener('submit', async (event) => {
         event.preventDefault(); // Mencegah reload halaman bawaan browser agar token tidak bocor [cite: 214]
 
