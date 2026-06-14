@@ -81,7 +81,10 @@ async function loadDashboardData(tab, page) {
             
             if (tab === 'my_reports') {
                 // 1. Saring paksa hanya laporan yang pelapornya murni 'riyan'
-                const filteredReports = rawResults.filter(report => report.reporter === 'riyan');
+                const filteredReports = rawResults.filter(report => {
+                    const name = typeof report.reporter === 'object' && report.reporter !== null ? report.reporter.username : report.reporter;
+                    return String(name).toLowerCase().trim() === 'riyan';
+                });
                 
                 // 2. Hitung total halaman asli murni milik riyan
                 const totalCount = filteredReports.length;
@@ -235,39 +238,39 @@ async function loadSummaryStats() {
         const response = await requestAPI(`/api/reports/?tab=my_reports&page_size=1000`, 'GET');
         if (response && response.status === 200) {
             const data = await response.json();
-            
-            // Saring murni hanya laporan yang dibuat oleh 'riyan'
-            const listDataWarga = (data.results || []).filter(r => r.reporter === 'riyan');
+            const rawResults = data.results || [];
 
-            const totalDraft = listDataWarga.filter(r => r.status === 'DRAFT').length;
-            
-            // Memasukkan status REPORTED dan VERIFIED ke hitungan "Diproses"
-            const totalDiproses = listDataWarga.filter(r => 
-                r.status === 'DIPROSES' || 
-                r.status === 'IN_PROGRESS' || 
-                r.status === 'REPORTED' || 
-                r.status === 'VERIFIED'
-            ).length;
-            
-            const totalSelesai = listDataWarga.filter(r => r.status === 'SELESAI' || r.status === 'RESOLVED').length;
+            let totalDraft = 0;
+            let totalDiproses = 0;
+            let totalSelesai = 0;
 
-            // 🎯 FIX UTAMA: Pindaan Eksklusif Berbasis Kombinasi Anti-Overwrite Container luar
+            rawResults.forEach(r => {
+                const reporterName = typeof r.reporter === 'object' && r.reporter !== null ? r.reporter.username : r.reporter;
+                
+                if (String(reporterName).toLowerCase().trim() === 'riyan') {
+                    const status = String(r.status).toUpperCase().trim();
+                    if (status === 'DRAFT') {
+                        totalDraft++;
+                    } else if (status === 'DIPROSES' || status === 'IN_PROGRESS' || status === 'REPORTED' || status === 'VERIFIED') {
+                        totalDiproses++;
+                    } else if (status === 'SELESAI' || status === 'RESOLVED') {
+                        totalSelesai++;
+                    }
+                }
+            });
+
+            // 🎯 FIX UTAMA: Menggunakan sistem Rantai Mandiri (else if) untuk mencegah overwrite container luar
             const listItems = document.querySelectorAll('.list-group-item, li, div, p, span');
             listItems.forEach(item => {
                 const text = item.textContent || "";
                 let badge = item.querySelector('.badge') || item.querySelector('span:last-child');
                 
-                if (badge) {
-                    // Baris Draft murni (tidak boleh mengandung kata diproses/selesai agar container luar tidak ikut me-render balik)
-                    if (text.includes('Draft') && !text.includes('Diproses') && !text.includes('Selesai')) {
+                if (badge && badge !== item) {
+                    if (text.includes('Draft:')) {
                         badge.innerText = totalDraft;
-                    }
-                    // Baris Diproses murni
-                    if (text.includes('Diproses') && !text.includes('Draft') && !text.includes('Selesai')) {
+                    } else if (text.includes('Diproses:')) {
                         badge.innerText = totalDiproses;
-                    }
-                    // Baris Selesai murni
-                    if (text.includes('Selesai') && !text.includes('Draft') && !text.includes('Diproses')) {
+                    } else if (text.includes('Selesai:')) {
                         badge.innerText = totalSelesai;
                     }
                 }
