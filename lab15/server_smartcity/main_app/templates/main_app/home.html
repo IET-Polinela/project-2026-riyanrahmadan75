@@ -1,0 +1,223 @@
+{% extends 'main_app/base.html' %}
+
+{% block content %}
+{% if not user.is_authenticated %}
+    <div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+        <div class="card border-0 shadow-lg rounded-4 p-5 text-center" style="max-width: 520px; background: rgba(15, 70, 51, 0.92); border: 1px solid rgba(255,255,255,0.08);">
+            <div class="mb-3" style="font-size: 2.5rem;">🔒</div>
+            <h3 class="fw-bold mb-2 text-white">Silakan Masuk Terlebih Dahulu</h3>
+            <p class="mb-3" style="color: rgba(226,239,235,0.85);">Agar bisa melihat halaman utama dan laporan masyarakat, Anda harus login terlebih dahulu.</p>
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+    <script>
+        setTimeout(function() {
+            window.location.href = "{% url 'login' %}";
+        }, 900);
+    </script>
+{% else %}
+<style>
+    .voice-hero {
+        position: relative;
+        overflow: hidden;
+        min-height: 520px;
+        border-radius: 32px;
+        background: linear-gradient(135deg, #064e3b 0%, #0f766e 40%, #047857 100%);
+        color: #f8fafc;
+    }
+    .voice-hero::before,
+    .voice-hero::after {
+        content: '';
+        position: absolute;
+        border-radius: 50%;
+        opacity: 0.35;
+    }
+    .voice-hero::before {
+        width: 260px;
+        height: 260px;
+        background: rgba(220, 252, 231, 0.45);
+        top: -60px;
+        left: -40px;
+    }
+    .voice-hero::after {
+        width: 380px;
+        height: 380px;
+        background: rgba(52, 211, 153, 0.18);
+        bottom: -120px;
+        right: -80px;
+    }
+    .voice-panel {
+        position: relative;
+        z-index: 2;
+    }
+    .voice-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.65rem 1rem;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.18);
+        font-weight: 700;
+        color: #d1fae5;
+        margin-bottom: 1.5rem;
+    }
+    .voice-buttons a {
+        min-width: 180px;
+    }
+    .voice-card {
+        background: rgba(16, 185, 129, 0.16);
+        border: 1px solid rgba(16, 185, 129, 0.25);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+        transition: transform 0.25s ease, background 0.25s ease;
+    }
+    .voice-card:hover {
+        transform: translateY(-6px);
+        background: rgba(16, 185, 129, 0.22);
+    }
+    .voice-card .icon-circle {
+        width: 72px;
+        height: 72px;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.12);
+        color: #d1fae5;
+        font-size: 2rem;
+    }
+    .pulse-dot {
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: rgba(220, 252, 231, 0.95);
+        animation: pulse 2.4s infinite ease-in-out;
+    }
+    .pulse-dot:nth-child(1) { top: 24%; left: 12%; animation-delay: 0s; }
+    .pulse-dot:nth-child(2) { top: 18%; right: 14%; animation-delay: 0.6s; }
+    .pulse-dot:nth-child(3) { bottom: 22%; left: 20%; animation-delay: 1.2s; }
+    .pulse-dot:nth-child(4) { bottom: 18%; right: 22%; animation-delay: 1.8s; }
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.9; }
+        50% { transform: scale(1.65); opacity: 0.25; }
+    }
+    .hero-wave {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 90px;
+        background: radial-gradient(circle at center top, rgba(255,255,255,0.16), transparent 48%);
+        clip-path: ellipse(90% 50% at 50% 0%);
+    }
+</style>
+
+<div class="container py-5 animate-fade-up">
+    {% if messages %}
+        <div class="alert alert-info border-0 shadow-sm rounded-4 py-3 mb-4" role="alert">
+            {% for message in messages %}
+                <div class="small fw-semibold">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <div class="voice-hero mb-5">
+        <div class="voice-panel h-100 d-flex flex-column justify-content-center">
+            <div class="row align-items-center gx-5">
+                <div class="col-lg-6">
+                    <div class="voice-badge">📣 Suara Warga</div>
+                    <h1 class="display-5 fw-bold mb-3" style="letter-spacing: -0.5px;">Suara Masyarakat, Solusi Nyata</h1>
+                    <p class="lead mb-4" style="max-width: 520px; color: rgba(226, 239, 235, 0.92);">Dorong perubahan bersama dengan aduan yang jelas, cepat ditangani, serta mudah dipantau oleh publik dan pemerintahan.</p>
+                    
+                    <!-- KODE TOMBOL YANG SUDAH DIPERBARUI -->
+                    <div class="voice-buttons d-flex flex-wrap gap-3 mb-4">
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'report_list' %}" class="btn btn-success btn-lg rounded-pill px-5">Lihat Laporan</a>
+                            
+                            <!-- LOGIKA: Jika Admin tampilkan Dashboard, jika Warga tampilkan Buat Laporan -->
+                            {% if user.is_staff or user.is_superuser %}
+                                <a href="{% url 'dashboard' %}" class="btn btn-outline-light btn-lg rounded-pill px-5">Dashboard</a>
+                            {% else %}
+                                <a href="{% url 'add_report' %}" class="btn btn-outline-light btn-lg rounded-pill px-5">Buat Laporan Baru</a>
+                            {% endif %}
+                            
+                        {% else %}
+                            <a href="{% url 'register' %}" class="btn btn-success btn-lg rounded-pill px-5">Daftar Sekarang</a>
+                            <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg rounded-pill px-5">Masuk</a>
+                        {% endif %}
+                    </div>
+                    <!-- AKHIR KODE TOMBOL -->
+
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="voice-card rounded-4 p-3">
+                                <div class="icon-circle mb-3">👥</div>
+                                <h6 class="mb-1">Komunitas Aktif</h6>
+                                <p class="small mb-0" style="color: rgba(226,239,235,0.9);">Suara rakyat dikumpulkan dan ditangani secara bersama.</p>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="voice-card rounded-4 p-3">
+                                <div class="icon-circle mb-3">✅</div>
+                                <h6 class="mb-1">Tindak Lanjut Cepat</h6>
+                                <p class="small mb-0" style="color: rgba(226,239,235,0.9);">Setiap laporan memiliki proses yang transparan dan jelas.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 position-relative">
+                    <div class="pulse-dot"></div>
+                    <div class="pulse-dot"></div>
+                    <div class="pulse-dot"></div>
+                    <div class="pulse-dot"></div>
+                    <div class="voice-card rounded-4 p-4" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.18);">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="fw-semibold mb-2">Aduan Terkini</h5>
+                                <p class="small mb-0" style="color: rgba(226,239,235,0.85);">Laporan yang masuk selalu dipantau dan diperbarui statusnya.</p>
+                            </div>
+                            <span class="badge rounded-pill bg-white text-success">Aktif</span>
+                        </div>
+                        <ul class="list-unstyled mb-3" style="color: rgba(226,239,235,0.92);">
+                            <li class="mb-2">📍 Jalan rusak di wilayah utara</li>
+                            <li class="mb-2">💡 Lampu jalan mati di RT 05</li>
+                            <li class="mb-2">🗑️ Sampah menumpuk di pasar</li>
+                        </ul>
+                        <div class="border-top pt-3" style="color: rgba(226,239,235,0.8);">
+                            <small>Ikuti perkembangan laporan masyarakat setiap hari.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="hero-wave"></div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card premium-card rounded-4 p-4 h-100" style="background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15);">
+                <div class="mb-3 fs-2 text-emerald-200">📣</div>
+                <h6 class="fw-semibold mb-2 text-white">Suara Dengar</h6>
+                <p class="small mb-0" style="color: rgba(226,239,235,0.88);">Platform ini membantu warga menyampaikan keluhan dengan mudah.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card premium-card rounded-4 p-4 h-100" style="background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15);">
+                <div class="mb-3 fs-2 text-sky-200">🌱</div>
+                <h6 class="fw-semibold mb-2 text-white">Aksi Nyata</h6>
+                <p class="small mb-0" style="color: rgba(226,239,235,0.88);">Setiap laporan bergerak menuju perbaikan lingkungan nyata.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card premium-card rounded-4 p-4 h-100" style="background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15);">
+                <div class="mb-3 fs-2 text-amber-200">🤝</div>
+                <h6 class="fw-semibold mb-2 text-white">Kolaborasi Publik</h6>
+                <p class="small mb-0" style="color: rgba(226,239,235,0.88);">Masyarakat dan pemerintah bekerja sama untuk solusi terbaik.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends 'main_app/base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card p-4 shadow-sm border-0">
+        <h3>Konfirmasi Hapus</h3>
+        <p>Apakah Anda yakin ingin menghapus laporan: <strong>"{{ object.title }}"</strong>?</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Ya, Hapus</button>
+            <a href="{% url 'report_list' %}" class="btn btn-secondary">Batal</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
