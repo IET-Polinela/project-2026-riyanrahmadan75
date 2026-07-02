@@ -1,6 +1,8 @@
 // js/api.js
-// BASE_URL ke backend Django lokal. Playwright test akan intercept semua /api/** otomatis.
-const BASE_URL = 'http://127.0.0.1:8000';
+const BASE_URL = (window.location.hostname === 'localhost' || 
+                  window.location.hostname === '127.0.0.1')
+    ? 'http://127.0.0.1:8000'
+    : 'http://103.151.63.88:8010';
 
 async function requestAPI(endpoint, method = 'GET', bodyData = null) {
     const headers = { 'Content-Type': 'application/json' };
