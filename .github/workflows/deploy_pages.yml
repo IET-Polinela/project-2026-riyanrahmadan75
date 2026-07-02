@@ -28,7 +28,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # UBAH DI BAWAH INI JIKA NAMA FOLDER SPA-NYA BERBEDA
-          path: './lab13/smartcity_citizen_spa_24782093'
+          path: './lab15/smartcity_citizen_spa_24782093'
 
       - name: Deploy to GitHub Pages
         id: deployment
